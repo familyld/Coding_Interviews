@@ -2,7 +2,16 @@
 
 本项目是对《剑指Offer——名企面试官精讲典型编程题（纪念版）》一书所做的笔记，以及书中67个编程题目的代码实现和解析。
 
-全书共8章，因此，我的笔记也分为相应的8个章节。
+全书共8章，因此，我的笔记也分为相应的8个章节，可以从以下目录进行快速访问：
+
+- [面试的流程](https://github.com/familyld/Coding_Interviews/blob/master/01interview_process.md)
+- [面试需要的基础知识](https://github.com/familyld/Coding_Interviews/blob/master/02the_basics.md)
+- [高质量的代码](https://github.com/familyld/Coding_Interviews/blob/master/03high_quality_code.md)
+- [解决面试题的思路](https://github.com/familyld/Coding_Interviews/blob/master/04approaches_to_solutions.md)
+- [优化时间和空间效率](https://github.com/familyld/Coding_Interviews/blob/master/05optimization.md)
+- [面试中的各项能力](https://github.com/familyld/Coding_Interviews/blob/master/06skills_for_interviews.md)
+- [两个面试案例](https://github.com/familyld/Coding_Interviews/blob/master/07interview_cases.md)
+- [英文版新增面试题](https://github.com/familyld/Coding_Interviews/blob/master/08additional_interview_questions.md)
 
 ## 内容简介
 
