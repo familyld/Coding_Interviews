@@ -13,6 +13,10 @@
 - [两个面试案例](https://github.com/familyld/Coding_Interviews/blob/master/07interview_cases.md)
 - [英文版新增面试题](https://github.com/familyld/Coding_Interviews/blob/master/08additional_interview_questions.md)
 
+笔记中会记录各章节的一些重点，各编程题的题目以及比较详细的思路解析。完整的代码会另外整理在C++文件夹和Python文件夹下。
+
+除了原作者给出的C++实现（其中题目2用的是C#）之外，我还打算编写对应的Python实现，这是后话了。代码文件夹中的utilities文件夹包含通用的各种数据结构，以及一些对应的基本方法。
+
 ## 内容简介
 
 ### 面试的流程
