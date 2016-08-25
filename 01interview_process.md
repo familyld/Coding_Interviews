@@ -164,3 +164,59 @@ void ReplaceBlank(char string[], int length)
     }
 }
 ```
+
+## 面试题5：从尾到头打印链表
+
+### 题目
+
+> 输入一个链表的头结点，从尾到头反过来打印出每个结点的值。链表结点定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+### 解析
+
+两种想法：
+
+1. 要反过来输出的话，可以首先顺着遍历链表并且将每个结点的值放入栈中，**利用栈后进先出的特性**来逐个pop出再输出；
+
+2. 利用递归，递归本质上就是一个栈结构。但是当链表很长的时候，使用递归有可能导致函数调用的层级很深，从而发生函数调用栈溢出的问题。
+
+```c++
+void PrintListReversingly_Iteratively(ListNode* pHead)
+{
+    std::stack<ListNode*> nodes;
+
+    ListNode* pNode = pHead;
+    while(pNode != NULL)
+    {
+        nodes.push(pNode);
+        pNode = pNode->m_pNext;
+    }
+
+    while(!nodes.empty())
+    {
+        pNode = nodes.top();
+        printf("%d\t", pNode->m_nValue);
+        nodes.pop();
+    }
+}
+
+void PrintListReversingly_Recursively(ListNode* pHead)
+{
+    if(pHead != NULL)
+    {
+        if (pHead->m_pNext != NULL)
+        {
+            PrintListReversingly_Recursively(pHead->m_pNext);
+        }
+
+        printf("%d\t", pHead->m_nValue);
+    }
+}
+```
