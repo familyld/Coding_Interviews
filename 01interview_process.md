@@ -220,3 +220,102 @@ void PrintListReversingly_Recursively(ListNode* pHead)
     }
 }
 ```
+
+## 面试题6：重建二叉树
+
+### 题目
+
+> 输入某二叉树的前序遍历和中序遍历的结果，请重建出该二叉树。假设输入的前序遍历和中序遍历的结果中都不含重复的数字。例如输入前序遍历序列 `{1,2,4,7,3,5,6,8}` 和中序遍历序列 `{4,7,2,1,5,3,8,6}`，则重建出如下所示的二叉树:
+
+```
+      1
+     / \
+    2   3
+   /   / \
+  4   5   6
+   \     /
+    7   8
+```
+
+> 二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```
+
+### 解析
+
+由中序遍历和前序遍历序列重建树，我们可以每次取出前序遍历序列的第一个点，它对应当前树的根节点。
+
+而在中序遍历序列中，这个点将序列分为左右两部分，左边就是根节点的左子树，右边的右子树。
+
+并且，假设左边有m个点，右边有n个点。那么在前序遍历序列中，第一个点接下来的m个点必然就是左子树，再往后的n个点必然就是右子树。
+
+因此，我们可以利用递归来完成重建，每次都按前序遍历序列的第一个点来划分中序遍历序列，进而划分前序遍历序列，然后分别重建根节点的左右子树即可。
+
+特别要注意**结束条件的设置**。
+
+```c++
+BinaryTreeNode* Construct(int* preorder, int* inorder, int length)
+{
+    if(preorder == NULL || inorder == NULL || length <= 0)
+        return NULL;
+
+    return ConstructCore(preorder, preorder + length - 1,
+        inorder, inorder + length - 1);
+}
+
+BinaryTreeNode* ConstructCore
+(
+    int* startPreorder, int* endPreorder,
+    int* startInorder, int* endInorder
+)
+{
+    // 前序遍历序列的第一个数字是根结点的值
+    int rootValue = startPreorder[0];
+    BinaryTreeNode* root = new BinaryTreeNode();
+    root->m_nValue = rootValue;
+    root->m_pLeft = root->m_pRight = NULL;
+
+    // 递归到前序遍历的最后一个点
+    if(startPreorder == endPreorder)
+    {
+        // 递归到中序遍历的最后一个点，并且这个点和前序遍历的最后一个点相同
+        if(startInorder == endInorder && *startPreorder == *startInorder)
+            return root;
+        else
+            throw exception();
+    }
+
+    // 在中序遍历中找到根结点的值
+    int* rootInorder = startInorder;
+    while(rootInorder <= endInorder && *rootInorder != rootValue)
+        ++ rootInorder;
+
+    // 遍历到最后还是找不到根节点就说明两个遍历序列是不相容的，属于异常输入
+    if(rootInorder == endInorder && *rootInorder != rootValue)
+        throw exception();
+
+    int leftLength = rootInorder - startInorder;
+    int* leftPreorderEnd = startPreorder + leftLength;
+    if(leftLength > 0)
+    {
+        // 构建左子树
+        root->m_pLeft = ConstructCore(startPreorder + 1, leftPreorderEnd,
+            startInorder, rootInorder - 1);
+    }
+    if(leftLength < endPreorder - startPreorder)
+    {
+        // 构建右子树
+        root->m_pRight = ConstructCore(leftPreorderEnd + 1, endPreorder,
+            rootInorder + 1, endInorder);
+    }
+
+    return root;
+}
+```
