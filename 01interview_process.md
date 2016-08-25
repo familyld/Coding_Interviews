@@ -44,7 +44,7 @@ CMyString& CMyString::operator = (const CMyString& str)
     delete []m_pData;
     m_pData = NULL;
 
-    m_pData = new char[strlen(str.m_pData) + 1]; //注意
+    m_pData = new char[strlen(str.m_pData) + 1]; //注意+1，用于字符串的结尾字符'\0'
     strcpy(m_pData, str.m_pData);
 
     return *this;
@@ -108,3 +108,59 @@ bool Find(int* matrix, int rows, int columns, int number)
 }
 ```
 
+## 面试题4：替换空格
+
+### 题目
+
+> 请实现一个函数，把字符串中的每个空格替换成"%20"，例如输入 “We are happy.”，则输出 “We%20are%20ha
+
+### 解析
+
+如果我们每替换一次都往后挪后面的所有字符，那么时间复杂度就是O(n^2)的，这样做了很多无用功，因为每个字符重复移动了多次。
+
+更好的做法是先计算后新字符串的长度，然后从字符串的后部开始检查并赋值，这样每个需要移动的字符只需要移动一次就完成了，总得时间复杂度是O(n)。
+
+```c++
+void ReplaceBlank(char string[], int length)
+{
+    if(string == NULL && length <= 0)
+        return;
+
+    /*originalLength 为字符串string的实际长度*/
+    int originalLength = 0;
+    int numberOfBlank = 0;
+    int i = 0;
+    while(string[i] != '\0')
+    {
+        ++ originalLength;
+
+        if(string[i] == ' ')
+            ++ numberOfBlank;
+
+        ++ i;
+    }
+
+    /*newLength 为把空格替换成'%20'之后的长度*/
+    int newLength = originalLength + numberOfBlank * 2;
+    if(newLength > length)
+        return;
+
+    int indexOfOriginal = originalLength;
+    int indexOfNew = newLength;
+    while(indexOfOriginal >= 0 && indexOfNew > indexOfOriginal)
+    {
+        if(string[indexOfOriginal] == ' ')
+        {
+            string[indexOfNew --] = '0';
+            string[indexOfNew --] = '2';
+            string[indexOfNew --] = '%';
+        }
+        else
+        {
+            string[indexOfNew --] = string[indexOfOriginal];
+        }
+
+        -- indexOfOriginal;
+    }
+}
+```
