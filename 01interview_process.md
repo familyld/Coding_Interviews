@@ -1,1 +1,56 @@
 # 面试的流程
+
+## 面试题1：赋值运算符函数
+
+### 题目
+
+> 如下为类型CMyString的声明，请为该类型添加赋值运算符函数。
+
+```c++
+class CMyString
+{
+public:
+    CMyString(char* pData = NULL);
+    CMyString(const CMyString& str);
+    ~CMyString(void);
+
+    CMyString& operator = (const CMyString& str);
+
+    void Print();
+
+private:
+    char* m_pData;
+};
+```
+
+### 解析
+
+乍一看，好像这个题目还挺简单的。但要注意的地方也不少。最基本的有以下几个需要考虑的点：
+
+1. 返回值设置为**该类型的引用**，只有返回引用，才能够进行**连续赋值**。
+
+2. 传入参数设置为**常量引用**。如果直接传入实例（按值传递）的话，从形参到实参就需要调用一次复制构造函数，造成一些不必要的开销。又因为赋值运算中传入参数不需要被修改，所以声明为常量。
+
+3. 释放当前实例本身（等号左方）的内存。如果没有释放，又分配了新的空间，就会发生**内存泄漏**（未释放的部分一直占据着内存单元，直到程序结束）。
+
+4. 判断**传入参数和当前实例是否同一个实例**，如果是的话，直接返回当前实例。如果不做这个判断，那么释放当前实例内存时，就会把传入参数的内存也释放掉了，要赋值的内容就丢失了。
+
+```c++
+CMyString& CMyString::operator = (const CMyString& str)
+{
+    if(this == &str)
+        return *this;
+
+    delete []m_pData;
+    m_pData = NULL;
+
+    m_pData = new char[strlen(str.m_pData) + 1]; //注意
+    strcpy(m_pData, str.m_pData);
+
+    return *this;
+}
+```
+
+更进一步的话，针对**内存不足**的情况，可以在释放实例本身内存之前，检查一下，余下的内存空间是否足以分配所需的新空间。
+
+具体来说，书中用了临时实例来实现，创建成功就交换当前实例和临时实例的值，在赋值完成后，临时实例被销毁，也即调用了析构函数把原本当前实例的内存释放了。
