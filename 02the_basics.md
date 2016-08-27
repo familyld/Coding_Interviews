@@ -378,3 +378,78 @@ template<typename T> T CQueue<T>::deleteHead()
     return head;
 }
 ```
+
+## 面试题8：旋转数组的最小数字
+
+### 题目
+
+> 把一个数组最开始的若干个元素搬到数组的末尾，我们称之为数组的旋转。输入一个递增排序的数组的一个旋转，输出旋转数组的最小元素。例如数组 `{3,4,5,1,2}` 为 `{1,2,3,4,5}` 的一个旋转，该数组的最小值为1。
+
+### 解析
+
+这道题其实有点类似于有序数组查找一个数的情况，还是可以**用二分查找的思路**。
+
+旋转数组其实可以分两成两个递增子数组A1和A2，而最小元素就是数组A2的第一个元素。
+
+具体来说，我们使用两个指针p1和p2，分别指向A1的第一个元素和A2的最后一个元素。p1右移，p2左移，不断缩小需要比较的范围。当p1和p2相差1时，p2所指的就是数组的最小元素，这就是终止条件。
+
+怎样使用二分查找的思路缩小范围呢？很简单。假设当前序列的中间序列为m，我们比较一下m和p1所指的元素谁比较大。如果m更大或者与p1相等，就说明m位于A1中，那么p1和m之间的元素我们都不再需要比较了，它们都比p1大，肯定不是最小元素，此时我们可以令p1指向m，得到新的序列，并继续下一次查找。
+
+反过来，如果m比p1所指的元素小，那就说明m位于A2中，此时最小元素在p1和m之间，我们可以令p2指向m来缩小查找范围。
+
+注意了！既然是比大小，那就很有可能出现相等的情况。当p1，p2和m都相等时，我们无法判断m到底属于A1还是A2，也就无法缩小范围。比方说数组 `{1,0,1,1,1}`，如果我们按照先比较p1和m的方式，下一步就变成搜索数组 `{1,1,1}` 了，显然是不对的。
+
+怎样处理这种情况呢？很可惜，没有取巧的方法，遇到这样的情况，我们只能顺序查找当前数组了。
+
+注意，在初始化中间元素时，不应直接初始化为0，而应初始化为p1所指的元素。因为旋转数组有可能是将0个数字旋转到尾部，也即整个数组依然是一个递增数组。如果我们将p1大于等于p2作为循环查找的条件，那就要特别注意这个点。
+
+```c++
+int Min(int* numbers, int length)
+{
+    if(numbers == NULL || length <= 0)
+        throw exception();
+
+    int index1 = 0;
+    int index2 = length - 1;
+    int indexMid = index1; // 如果旋转了0个元素，那么最小元素就是index1所指的，所以这样初始化
+    while(numbers[index1] >= numbers[index2])
+    {
+        // 如果index1和index2指向相邻的两个数，
+        // 则index1指向第一个递增子数组的最后一个数字，
+        // index2指向第二个子数组的第一个数字，也就是数组中的最小数字
+        if(index2 - index1 == 1)
+        {
+            indexMid = index2;
+            break;
+        }
+
+        // 如果下标为index1、index2和indexMid指向的三个数字相等，
+        // 则只能顺序查找
+        indexMid = (index1 + index2) / 2;
+        if(numbers[index1] == numbers[index2] && numbers[indexMid] == numbers[index1])
+            return MinInOrder(numbers, index1, index2);
+
+        // 缩小查找范围
+        if(numbers[indexMid] >= numbers[index1])
+            index1 = indexMid;
+        else if(numbers[indexMid] <= numbers[index2])
+            index2 = indexMid;
+    }
+
+    return numbers[indexMid];
+}
+
+int MinInOrder(int* numbers, int index1, int index2)
+{
+    int result = numbers[index1];
+    // 按顺序查找
+    for(int i = index1 + 1; i <= index2; ++i)
+    {
+        if(result > numbers[i])
+            result = numbers[i];
+    }
+
+    return result;
+}
+
+```
