@@ -453,3 +453,54 @@ int MinInOrder(int* numbers, int index1, int index2)
 }
 
 ```
+
+## 面试题9：斐波拉契数列
+
+### 题目
+
+> 写一个函数，输入n，求斐波拉契（Fibonacci）数列的第n项。斐波拉契数列的定义如下：
+
+![fib1](https://wikimedia.org/api/rest_v1/media/math/render/svg/f00c4321176b6522fe148a11a80a8e5fca9e88da)，初始值：![fib1](https://wikimedia.org/api/rest_v1/media/math/render/svg/6890c552b2226e339520693a236386ed2346a63a)
+
+### 解析
+
+求斐波拉契数列最简单的一种思路是使用递归，但是递归其实是一种效率非常低的解法，举个例子，求数列的第10项，过程如下：
+
+```
+             f(10)
+            /    \
+        f(9)      f(8)
+       /    \    /    \
+    f(8)  f(7) f(7)  f(6)
+...  ...  ...  ...  ...  ...
+```
+
+每一项都被分解为左右两棵子树来求，可以看到左右两棵子树会有很多重复的结点，这些都是冗余的。当n相当大时，会有大量的冗余结点，造成求解的效率非常低。
+
+更好的思路是采用O(n)的解法，从f(2)开始逐步往上算，这样每一项只求一次就可以了。
+
+```c++
+long long Fibonacci_Solution2(unsigned n)
+{
+    int result[2] = {0, 1};
+    if(n < 2)
+        return result[n];
+
+    long long  fibNMinusOne = 1;
+    long long  fibNMinusTwo = 0;
+    long long  fibN = 0;
+    for(unsigned int i = 2; i <= n; ++ i)
+    {
+        fibN = fibNMinusOne + fibNMinusTwo; // f(n) = f(n-1) + f(n-2)
+
+        // 更新f(n-1) 和 f(n-2)
+        fibNMinusTwo = fibNMinusOne;
+        fibNMinusOne = fibN;
+    }
+
+     return fibN;
+}
+```
+
+此外还有基于矩阵乘法的O(log n)解法，这里暂不深入探索，感兴趣的话可以在代码文件中查看。
+
