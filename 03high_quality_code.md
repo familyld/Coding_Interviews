@@ -157,3 +157,70 @@ void PrintNumber(char* number)
         printf("\t");
 }
 ```
+
+## 面试题13：在O(1)时间删除链表结点
+
+### 题目
+
+> 给定单向链表的头指针和一个结点指针，定义一个函数在O(1)时间删除该结点。链表结点与函数的定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+```
+void DeleteNode(ListNode** pListHead, ListNode* pToBeDeleted);
+```
+
+### 解析
+
+最常规的一种思路是遍历链表找到这个结点，删除它并把它前一节点的指针指向下一结点。但这样做复杂度是O(n)，而题目要求的是O(1)的时间复杂度，怎么做到呢？
+
+其实不难，所谓O(1)意思是**处理的时间与输入规模无关**。我们可以直接从要删除的结点下手，把下一结点的内容复制到要删除的结点中，然后把要删除的结点的指针指向下下个结点，并把下一结点删除掉。这样做和前面的效果是一样的。
+
+但是！注意了，如果**要删除的结点是尾**结点就无法这样做了，因为没有下一结点，这时只能顺序遍历来删除。还有一个细节，如果**链表只有一个结点**，那么除了删除，还要把头结点设置为NULL。
+
+此外，以上分析都是基于链表中存在待删除结点来讨论的，如果要删除的结点不在链表中就会出错，这就需要调用函数的人自己注意了。要确定一个结点是否在链表中还是需要O(n)的时间。
+
+```c++
+void DeleteNode(ListNode** pListHead, ListNode* pToBeDeleted)
+{
+    if(!pListHead || !pToBeDeleted)
+        return;
+
+    // 要删除的结点不是尾结点
+    if(pToBeDeleted->m_pNext != NULL)
+    {
+        ListNode* pNext = pToBeDeleted->m_pNext;
+        pToBeDeleted->m_nValue = pNext->m_nValue;
+        pToBeDeleted->m_pNext = pNext->m_pNext;
+
+        delete pNext;
+        pNext = NULL;
+    }
+    // 链表只有一个结点，删除头结点（也是尾结点）
+    else if(*pListHead == pToBeDeleted)
+    {
+        delete pToBeDeleted;
+        pToBeDeleted = NULL;
+        *pListHead = NULL;
+    }
+    // 链表中有多个结点，删除尾结点
+    else
+    {
+        ListNode* pNode = *pListHead;
+        while(pNode->m_pNext != pToBeDeleted)
+        {
+            pNode = pNode->m_pNext;
+        }
+
+        pNode->m_pNext = NULL;
+        delete pToBeDeleted;
+        pToBeDeleted = NULL;
+    }
+}
+```
