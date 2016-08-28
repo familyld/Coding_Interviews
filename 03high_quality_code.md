@@ -348,3 +348,58 @@ ListNode* FindKthToTail(ListNode* pListHead, unsigned int k)
     return pBehind;
 }
 ```
+
+## 面试题16：反转链表
+
+### 题目
+
+> 定义一个函数，输入一个链表的头结点，反转该链表并输出反转后链表的头结点。链表结点定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+### 解析
+
+关于链表的题目，其实最好画图来把过程中的各个步骤都理清楚。要实现反转链表，我们需要维护三个指针，一个指向当前结点，一个指向上一结点，还有一个指向下一结点。
+
+当我们实现反转时，其实是把原链表中上一结点变成当前结点的下一结点，但这样就会使得链表发生断裂，原链表中下一结点就找不到了，所以我们要先记住它。
+
+在每一个翻转过程中，有以下步骤：
+
+1. 得到当前结点的下一结点
+2. 判断下一结点是否NULL，也即是否到达原链表的链表尾
+    - 若下一结点为NULL，说明当前结点就是反转链表的链表头
+3. 把当前结点的指针指向上一结点
+4. 更新
+    - 当前结点变为上一结点
+    - 下一结点变为当前结点
+5. 当前结点为NULL时结束，否则继续下一次反转
+
+```c++
+ListNode* ReverseList(ListNode* pHead)
+{
+    ListNode* pReversedHead = NULL;
+    ListNode* pNode = pHead;
+    ListNode* pPrev = NULL;
+    while(pNode != NULL)
+    {
+        ListNode* pNext = pNode->m_pNext;
+
+        if(pNext == NULL)
+            pReversedHead = pNode;
+
+        pNode->m_pNext = pPrev;
+
+        pPrev = pNode;
+        pNode = pNext;
+    }
+
+    return pReversedHead;
+}
+```
+
