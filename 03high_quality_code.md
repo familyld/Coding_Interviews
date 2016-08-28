@@ -403,3 +403,64 @@ ListNode* ReverseList(ListNode* pHead)
 }
 ```
 
+## 面试题17：合并两个排序的链表
+
+### 题目
+
+> 输入两个递增排序的链表，合并这两个链表并使新链表中的结点仍然是按照递增排序的。例如下面的链表1和链表2可以合并为链表3。
+
+```
+链表1： 1 -> 3 -> 5 -> 7
+链表2： 2 -> 4 -> 6 -> 8
+链表3： 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+```
+
+> 链表结点定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+### 解析
+
+这题其实写成代码不算难，但还是要理清思路。合并两个**递增排序链表**，我们可以采取递归的方式。
+
+令**递归函数返回合并链表的链表头**，在每次递归中，我们先对两个链表的链表头进行判断，取较小的一个作为合并链表的头结点（并在函数结束时返回）。然后，还要重新设置这个结点的next指针，它指向的是两个链表未被并入的结点中最小的那个结点。要实现这一点，我们只需要令这一轮头结点被并入的链表的头结点指针往后移动一个位置，然后继续递归合并两个链表就可以了。**下一轮递归返回的链表头就是当前合并链表的头结点的next指针指向的结点**。
+
+关键是**递归结束条件的设置**，有以下三种情况：
+
+1. 链表1的头结点为NULL而链表2不是，此时返回链表2的头结点即可，因为链表2本身也是递增排序，所以合并后依然能保持递增排序；
+
+2. 链表2的头结点为NULL而链表1不是，此时返回链表1的头结点即可，因为链1本身也是递增排序，所以合并后依然能保持递增排序；
+
+3. 链表1和链表2的头结点都是NULL，此时返回NULL即可。
+
+```c++
+ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
+{
+    // 这里实际已经包含了三种递归结束条件
+    if(pHead1 == NULL)
+        return pHead2;
+    else if(pHead2 == NULL)
+        return pHead1;
+
+    ListNode* pMergedHead = NULL;
+
+    if(pHead1->m_nValue < pHead2->m_nValue)
+    {
+        pMergedHead = pHead1;
+        pMergedHead->m_pNext = Merge(pHead1->m_pNext, pHead2);
+    }
+    else
+    {
+        pMergedHead = pHead2;
+        pMergedHead->m_pNext = Merge(pHead1, pHead2->m_pNext);
+    }
+
+    return pMergedHead;
+}
+```
