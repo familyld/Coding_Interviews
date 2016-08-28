@@ -79,3 +79,81 @@ bool equal(double num1, double num2)
         return false;
 }
 ```
+
+## 面试题12：打印1到最大的n位数
+
+### 题目
+
+> 输入数字n，按顺序打印出从1最大的n位十进制数。比如输入3，则打印出1、2、3一直到最大的3位数即999。
+
+### 解析
+
+初看这条题，容易产生好简单的错觉。如果我们不需要考虑**大数问题**，那这条题将没有任何难度。而事实上，题目所说的n位数很可能是超出int甚至long long所能表示的，因此我们只能用字符串或者数组来进行表示了。
+
+考虑字符串表示的方法，最直观的做法是**模拟加法**来实现，代码中的解法一就是这样做的。但是这样写的代码不太简洁，有没有更好的思路呢？
+
+其实，题目要求按顺序打印出从1最大的n位十进制数，这个数的每一位无非就只有10种可能，也即我们可以把它想像成一个**排列组合问题**。只要我们按顺序罗列出所有排列组合就可以了。
+
+可以使用**递归**的方式来实现，递归结束的条件就是设置完最后一位的数值。
+
+最后要注意，使用字符串来表示数字，从索引0到n-1分别对应着数字的最高位到最低位。但不是所有数都是n位数，有可能是两位数、三位数等等，因此输出时要把高位的0过滤掉。特别注意，按照前面的思路，我们有可能得到n位全是0这种排列，按题目要求是从1开始输出，所以我们也要注意避免输出数字0。
+
+```c++
+void Print1ToMaxOfNDigits_2(int n)
+{
+    if(n <= 0) // 避免不合法的输入
+        return;
+
+    char* number = new char[n + 1];
+    number[n] = '\0';
+
+    // 依次尝试最高位数字的10种可能
+    for(int i = 0; i < 10; ++i)
+    {
+        number[0] = i + '0'; //int转为对应char
+        Print1ToMaxOfNDigitsRecursively(number, n, 0);
+    }
+
+    delete[] number;
+}
+
+// 利用递归来完成数字各个位置的设置，并尝试所有的可能
+void Print1ToMaxOfNDigitsRecursively(char* number, int length, int index)
+{
+    // 索引为length-1时，数字设置完成，打印当前数字
+    if(index == length - 1)
+    {
+        PrintNumber(number);
+        return;
+    }
+
+    // 未设置完成则依次尝试右边一位的10种可能
+    for(int i = 0; i < 10; ++i)
+    {
+        number[index + 1] = i + '0';
+        Print1ToMaxOfNDigitsRecursively(number, length, index + 1);
+    }
+}
+
+// 字符串number表示一个数字，数字有若干个0开头
+// 打印出这个数字，并忽略开头的0
+void PrintNumber(char* number)
+{
+    bool isBeginning0 = true;
+    int nLength = strlen(number);
+
+    for(int i = 0; i < nLength; ++ i)
+    {
+        if(isBeginning0 && number[i] != '0')
+            isBeginning0 = false;
+
+        if(!isBeginning0)
+        {
+            printf("%c", number[i]);
+        }
+    }
+
+    if(!isBeginning0)
+        printf("\t");
+}
+```
