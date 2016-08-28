@@ -224,3 +224,62 @@ void DeleteNode(ListNode** pListHead, ListNode* pToBeDeleted)
     }
 }
 ```
+
+## 面试题14：调整数组顺序使奇数位于偶数前面
+
+### 题目
+
+> 输入一个整数数组，实现一个函数来调整该数组中数字的顺序，使得所有奇数位于数组的前半部分，所有偶数位于数组的后半部分。
+
+### 解析
+
+这条题的思路其实不难，我们**维护两个指针**即可。指针1初始化指向数组的第一个元素，并向后移动；指针2初始化指向数组的最后一个元素，并向前移动。
+
+首先往后移动指针1，当指针1指向偶数时，开始往前移动指针2，直至指针2指向奇数。注意，在这两个过程中，有可能指针1和指针2会相遇，这表示数组已经调整完毕。如果没有相遇，就证明还需继续调整，将此时指针1和指针2所指的数字交换位置，再继续下一轮的查找，直至两指针相遇时结束。
+
+这道题其实可以做很多扩展，可能不是针对奇偶数重排，而是素数非素数，正数负数等等。**考虑扩展性**的话，我们不妨把判断部分分离出来写成一个函数，在重排时**把判断函数作为一个参数传入**即可。
+
+具体来说，这里依然使用位运算来实现判断奇偶，把这个操作封装为一个函数，传入参数为int型变量，返回值为bool型变量。
+
+在声明重排函数的参数时，格式就是 `返回值类型 (*函数别名)(函数的参数类型)`。其中函数别名根据自己喜欢来取就可以了。
+
+在调用重排函数时，我们传入函数名就可以了，不需要作其他处理。
+
+```c++
+void ReorderOddEven_2(int *pData, unsigned int length)
+{
+    Reorder(pData, length, isEven);
+}
+
+void Reorder(int *pData, unsigned int length, bool (*func)(int))
+{
+    if(pData == NULL || length == 0)
+        return;
+
+    int *pBegin = pData;
+    int *pEnd = pData + length - 1;
+
+    while(pBegin < pEnd)
+    {
+        // 向后移动pBegin
+        while(pBegin < pEnd && !func(*pBegin))
+            pBegin ++;
+
+        // 向前移动pEnd
+        while(pBegin < pEnd && func(*pEnd))
+            pEnd --;
+
+        if(pBegin < pEnd)
+        {
+            int temp = *pBegin;
+            *pBegin = *pEnd;
+            *pEnd = temp;
+        }
+    }
+}
+
+bool isEven(int n)
+{
+    return (n & 1) == 0;
+}
+```
