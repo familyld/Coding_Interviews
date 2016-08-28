@@ -283,3 +283,68 @@ bool isEven(int n)
     return (n & 1) == 0;
 }
 ```
+
+## 面试题15：链表中的倒数第k个结点
+
+### 题目
+
+> 输入一个链表，输出该链表中倒数第k个结点。为了符合大多数人的习惯，本题从1开始计数，即链表的尾结点是倒数第1个结点。例如一个链表有6个结点，从头结点开始它们的值依次是1、2、3、4、5、6。这个链表的倒数第3个结点是值为4的结点。链表结点定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+### 解析
+
+由于这是一个单向链表，所以就不存在先走到链表尾部，再倒退k-1步的可能了。
+
+最普通的一个思路是，使用一个指针，先遍历一次整个链表，得到链表长度n。倒数第k个结点是链表中的第n-k+1个结点。我们只要然后重新从链表头开始走n-k步就能走到它了。
+
+但是这样需要遍历两次，有没有**只遍历一次**就能找到它的方法呢？
+
+有的。类似上一道题，我们维护两个指针就可以了。指针1先走，在指针1走了k-1步之后指针2再走。这样当指针1到底尾结点时，指针2所指的就是倒数第k个结点。
+
+上面的解法有3个很大的漏洞：
+
+1. **链表头结点是空指针**，遍历这样的链表会造成访问空指针指向的内存，引起程序崩溃，所以要额外处理。
+
+2. **链表结点数目少于k**，如果我们直接让指针1在循环中走k-1步而不加判断，同样会访问到空指针指向的内存。
+
+3. **k为0**，如果我们定义k是unsigned int型，那么k-1就是unsigned int型能表示的最大整数4294967295（即二进制的0xFFFFFFFF，最高位不需用于标识符号），循环的次数将会非常恐怖.. 所以我们必须对k值是否合法也做一个判断。
+
+```c++
+ListNode* FindKthToTail(ListNode* pListHead, unsigned int k)
+{
+    // 空指针处理和合法k值检查
+    if(pListHead == NULL || k == 0)
+        return NULL;
+
+    ListNode *pAhead = pListHead;
+    ListNode *pBehind = NULL;
+
+    // 指针1走k-1步
+    for(unsigned int i = 0; i < k - 1; ++ i)
+    {
+        if(pAhead->m_pNext != NULL) // 对链表长度不足k作出处理
+            pAhead = pAhead->m_pNext;
+        else
+        {
+            return NULL;
+        }
+    }
+
+    // 指针2开始走，直到指针1走到链表尾时停止
+    pBehind = pListHead;
+    while(pAhead->m_pNext != NULL)
+    {
+        pAhead = pAhead->m_pNext;
+        pBehind = pBehind->m_pNext;
+    }
+
+    return pBehind;
+}
+```
