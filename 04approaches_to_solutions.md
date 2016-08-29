@@ -178,3 +178,94 @@ void printNumber(int number)
     printf("%d\t", number);
 }
 ```
+
+## 面试题21：包含min函数的栈
+
+### 题目
+
+> 定义栈的数据结构，请在该类型中实现一个能够得到栈的最小元素的min函数。在该栈中，调用min、push及pop的时间复杂度都是O(1)。
+
+### 解析
+
+要实现带min函数的栈，难度不仅在于每次入栈，最小元素都会变动；还在于每次出栈一个元素，最小元素也会变动。如果我们只用一个int类型来记录最小元素，那么出栈时我们就不得不把所有剩余元素都检查一遍才能更新最小元素。
+
+更好的方法是在数据栈之外再维护一个辅助栈。每次把新元素压入数据栈，如果新元素比辅助栈的栈顶（当前最小元素）小，就把新元素也压入辅助栈；如果新元素较大，就把辅助栈栈顶元素再一次压入辅助栈。
+
+出栈时，同时把数据栈和辅助栈的栈顶出栈即可。按照前面入栈的操作，此时辅助栈栈顶的元素必然也是数据栈中最小的元素。
+
+要获取最小元素的值只需要访问辅助栈的栈顶就可以了。
+
+以上三个操作的时间复杂度都是O(1)，符合题目要求。还有一个小细节需要注意一下，就是在调用pop和min时应检查一下栈是否非空。
+
+```c++
+template <typename T> class StackWithMin
+{
+public:
+    StackWithMin(void) {}
+    virtual ~StackWithMin(void) {}
+
+    T& top(void);
+    const T& top(void) const;
+
+    void push(const T& value);
+    void pop(void);
+
+    const T& min(void) const;
+
+    bool empty() const;
+    size_t size() const;
+
+private:
+    std::stack<T>   m_data;     // 数据栈，存放栈的所有元素
+    std::stack<T>   m_min;      // 辅助栈，存放栈的最小元素
+};
+
+template <typename T> void StackWithMin<T>::push(const T& value)
+{
+    // 把新元素添加到辅助栈
+    m_data.push(value);
+
+    // 当辅助栈为空或者新元素比之前的最小元素小时，把新元素插入辅助栈里；
+    // 否则把之前的最小元素重复插入辅助栈里
+    if(m_min.size() == 0 || value < m_min.top())
+        m_min.push(value);
+    else
+        m_min.push(m_min.top());
+}
+
+template <typename T> void StackWithMin<T>::pop()
+{
+    assert(m_data.size() > 0 && m_min.size() > 0);
+
+    m_data.pop();
+    m_min.pop();
+}
+
+
+template <typename T> const T& StackWithMin<T>::min() const
+{
+    assert(m_data.size() > 0 && m_min.size() > 0);
+
+    return m_min.top();
+}
+
+template <typename T> T& StackWithMin<T>::top()
+{
+    return m_data.top();
+}
+
+template <typename T> const T& StackWithMin<T>::top() const
+{
+    return m_data.top();
+}
+
+template <typename T> bool StackWithMin<T>::empty() const
+{
+    return m_data.empty();
+}
+
+template <typename T> size_t StackWithMin<T>::size() const
+{
+    return m_data.size();
+}
+```
