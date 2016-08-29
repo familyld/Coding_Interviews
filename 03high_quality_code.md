@@ -178,7 +178,7 @@ void DeleteNode(ListNode** pListHead, ListNode* pToBeDeleted);
 
 ### 解析
 
-最常规的一种思路是遍历链表找到这个结点，删除它并把它前一节点的指针指向下一结点。但这样做复杂度是O(n)，而题目要求的是O(1)的时间复杂度，怎么做到呢？
+最常规的一种思路是遍历链表找到这个结点，删除它并把它前一结点的指针指向下一结点。但这样做复杂度是O(n)，而题目要求的是O(1)的时间复杂度，怎么做到呢？
 
 其实不难，所谓O(1)意思是**处理的时间与输入规模无关**。我们可以直接从要删除的结点下手，把下一结点的内容复制到要删除的结点中，然后把要删除的结点的指针指向下下个结点，并把下一结点删除掉。这样做和前面的效果是一样的。
 
@@ -462,5 +462,74 @@ ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
     }
 
     return pMergedHead;
+}
+```
+
+## 面试题18：树的子结构
+
+> 题目：输入两棵二叉树A和B，判断B是不是A的子结构。二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```
+
+### 解析
+
+树的结构要比链表更加复杂，但是只要分析得好，这一题不算太难。
+
+我们将整个判断过程分为两个步骤：
+
+1. 寻找树A中与树B根结点值相同的结点R；
+2. 分析树A中以结点R为根结点的子树是否和树B的结构一样。
+
+具体来说可以实现两个递归函数。
+
+函数1执行步骤1。输入两棵树的根结点，如果树A根结点与B的不同，则把它左右子树的根结点作为树A的根节点传入函数1来递归查找；如果两棵树根结点相同就调用函数2。递归的终止条件有两种情形：
+
+1. 树A或树B的根节点为NULL，有可能是因为输入了空指针，也可能是递归查找到达了树A的叶结点处仍然没匹配上，这两种情况都是返回false；
+2. 这一轮成功匹配上，匹配上之后就不需要再递归查找了，所以我们在 调用函数2得到结果后，先判断有没匹配成功，没有再看左子树，左子树也没有才看右子树。
+
+函数2执行步骤2。输入两棵树的当前结点，如果树B当前结点为NULL，说明匹配成功了；否则如果树A当前结点为NULL，说明A已经到叶结点但还没匹配完，也即匹配失败。另外，只要在这一轮中，两棵树的当前结点值不同，也算匹配失败。如果经过以上判断后，仍然没有得到匹配结果，那就说明目前还是能匹配上的，下一步继续递归地检查两棵树当前结点的左子树和右子树是否也能匹配。
+
+```c++
+bool HasSubtree(BinaryTreeNode* pRoot1, BinaryTreeNode* pRoot2)
+{
+    bool result = false;
+
+    // 如果到了叶结点依然没匹配上或者传入的树是空指针就直接返回false
+    if(pRoot1 != NULL && pRoot2 != NULL)
+    {
+        if(pRoot1->m_nValue == pRoot2->m_nValue)
+            result = DoesTree1HaveTree2(pRoot1, pRoot2);
+        // 实际隐藏了一个递归结束的条件
+        // 成功匹配时，不会再继续递归搜索左右子树了
+        // 因此成功匹配的那一轮就停下了并返回结果
+        if(!result)
+            result = HasSubtree(pRoot1->m_pLeft, pRoot2);
+        if(!result)
+            result = HasSubtree(pRoot1->m_pRight, pRoot2);
+    }
+
+    return result;
+}
+
+bool DoesTree1HaveTree2(BinaryTreeNode* pRoot1, BinaryTreeNode* pRoot2)
+{
+    if(pRoot2 == NULL)
+        return true;
+
+    if(pRoot1 == NULL)
+        return false;
+
+    if(pRoot1->m_nValue != pRoot2->m_nValue)
+        return false;
+
+    return DoesTree1HaveTree2(pRoot1->m_pLeft, pRoot2->m_pLeft) &&
+        DoesTree1HaveTree2(pRoot1->m_pRight, pRoot2->m_pRight);
 }
 ```
