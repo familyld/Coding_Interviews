@@ -450,3 +450,80 @@ bool VerifySquenceOfBST(int sequence[], int length)
     return (left && right);
 }
 ```
+
+## 面试题25：二叉树中和为某一值的路径
+
+### 题目
+
+> 输入一棵二叉树和一个整数，打印出二叉树中结点值的和为输入整数的所有路径。从树的根节点开始往下一直到叶结点所经过的结点形成一条路径。二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```。
+
+### 解析
+
+由于题目要求打印出所有符合要求的路径，所以我们需要遍历整棵树。而且我们需要对每条路径上的点进行求和。有没有办法可以同时实现这两点呢？
+
+我们可以使用DFS进行前序遍历，这样就能对单条路径上的点进行求和了，当需要计算另外一条路径时，我们只需要把不属于另一路径的点丢掉就可以了。
+
+具体来说：我们用前序遍历访问到某一结点时，把该结点添加到路径上，并累加它的值。
+
+- 如果当前结点是叶结点，并且路径中结点值的和为输入的整数，则将路径打印出来；
+- 如果当前结点不是叶结点，则继续访问它的左右子结点。
+
+在访问完当前结点后，递归函数会自动返回到它的父结点处，我们需要做的就是在返回之前把它从路径中拿走，并且从结点和中减去该结点的值。
+
+我们可以使用vector来存储路径，迭代器允许我们输出vector的每一个点。此外，一定要特别注意哪些参数需使用引用传递，哪些采用值传递。
+
+```c++
+void FindPath(BinaryTreeNode* pRoot, int expectedSum)
+{
+    if(pRoot == NULL)
+        return;
+
+    std::vector<int> path;
+    int currentSum = 0;
+    FindPath(pRoot, expectedSum, path, currentSum);
+}
+
+void FindPath(
+    BinaryTreeNode*   pRoot,
+    int               expectedSum,
+    std::vector<int>& path,
+    int&              currentSum
+)
+{
+    currentSum += pRoot->m_nValue;
+    path.push_back(pRoot->m_nValue);
+
+    // 如果是叶结点，并且路径上结点的和等于输入的值
+    // 打印出这条路径
+    bool isLeaf = pRoot->m_pLeft == NULL && pRoot->m_pRight == NULL;
+    if(currentSum == expectedSum && isLeaf)
+    {
+        printf("A path is found: ");
+        std::vector<int>::iterator iter = path.begin();
+        for(; iter != path.end(); ++ iter)
+            printf("%d\t", *iter);
+
+        printf("\n");
+    }
+
+    // 如果不是叶结点，则遍历它的子结点
+    if(pRoot->m_pLeft != NULL)
+        FindPath(pRoot->m_pLeft, expectedSum, path, currentSum);
+    if(pRoot->m_pRight != NULL)
+        FindPath(pRoot->m_pRight, expectedSum, path, currentSum);
+
+    // 在返回到父结点之前，在路径上删除当前结点，
+    // 并在currentSum中减去当前结点的值
+    currentSum -= pRoot->m_nValue;
+    path.pop_back();
+}
+```
