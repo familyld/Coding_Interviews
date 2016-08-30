@@ -381,3 +381,72 @@ void PrintFromTopToBottom(BinaryTreeNode* pRoot)
     }
 }
 ```
+
+## 面试题24：二叉搜索树的后序遍历序列
+
+### 题目
+
+> 输入一个整数数组，判断该数组是不是某二叉搜索树的后序遍历的结果。如果是则返回true，否则返回false。假设输入的数组的任意两个数字都互不相同。
+
+### 解析
+
+先举个例子吧，给定一棵BST：
+
+```
+      8
+    /   \
+   6     10
+  / \    / \
+ 5   7  9  11
+```
+
+可以看到，它的特点就是：**对于任意一个有子结点的结点来说，左子树上的元素都比它小，右子树上的元素都比它大**。
+
+它的后序遍历序列是 `5,7,6,9,11,10,8`，我们发现最后一个点对应着BST的根结点，而前面的序列可以分为两部分，**由第一个大于根结点的数开始是右子树，前面的部分是左子树**。
+
+题目要求的是判断一个序列是否BST的后序遍历序列，我们可以基于上面说到的规律利用递归的方式来实现：
+
+1. 每次接收到一个序列，首先取出根结点（序列的最后一个元素）；
+2. 然后在除根结点外的序列中找出第一个比根结点大的元素（有可能没有，也即右子树为空），把序列分割为左子树部分和右子树部分；
+3. 然后检查右子树部分是否所有元素都比根结点大（左子树在步骤2已经完成检验了）；
+4. 通过步骤3，则递归判断左右子树两个序列是否BST，注意检查是否有左右子树；
+5. 未通过步骤3，则返回错误。
+
+```c++
+// BST：Binary Search Tree，二叉搜索树
+bool VerifySquenceOfBST(int sequence[], int length)
+{
+    if(sequence == NULL || length <= 0)
+        return false;
+
+    int root = sequence[length - 1];
+
+    // 在二叉搜索树中左子树的结点小于根结点
+    int i = 0;
+    for(; i < length - 1; ++ i)
+    {
+        if(sequence[i] > root)
+            break;
+    }
+
+    // 在二叉搜索树中右子树的结点大于根结点
+    int j = i;
+    for(; j < length - 1; ++ j)
+    {
+        if(sequence[j] < root)
+            return false;
+    }
+
+    // 判断左子树是不是二叉搜索树
+    bool left = true;
+    if(i > 0)
+        left = VerifySquenceOfBST(sequence, i);
+
+    // 判断右子树是不是二叉搜索树
+    bool right = true;
+    if(i < length - 1)
+        right = VerifySquenceOfBST(sequence + i, length - i - 1);
+
+    return (left && right);
+}
+```
