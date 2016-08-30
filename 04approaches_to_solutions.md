@@ -269,3 +269,61 @@ template <typename T> size_t StackWithMin<T>::size() const
     return m_data.size();
 }
 ```
+
+## 面试题22：栈的压入、弹出序列
+
+### 题目
+
+> 输入两个整数序列，第一个序列表示栈的压入顺序，请判断第二个序列是否为该栈的弹出顺序。假设压入栈的数字均不想等。例如序列 `1、2、3、4、5` 是某栈的压栈序列，序列 `4、5、3、2、1` 是该压栈序列对应的一个弹出序列，但 `4、3、5、1、2` 就不可能是该压栈序列的弹出序列。
+
+### 解析
+
+要实现题目要求，其实思路还是蛮清晰的。我们每次检查弹出序列的头部元素，如果此时栈内没有该元素，就按照压栈序列的顺序将数字压入辅助栈，直到辅助栈的栈顶和弹出序列的头部元素相同。这时可以从辅助栈弹出一个元素，而弹出序列的头部也往后移动一位，继续下一次检查。
+
+要注意循环的终止条件和匹配成功的条件。当匹配完弹出序列最后一位时顺利退出，但此时还应检查压栈序列的数是否已全部用完，否则仍然不算成功匹配；另外，在压栈的过程中，有可能压入了所有数字后仍然无法匹配到弹出序列，此时也应退出循环。
+
+```c++
+bool IsPopOrder(const int* pPush, const int* pPop, int nLength)
+{
+    bool bPossible = false;
+
+    if(pPush != NULL && pPop != NULL && nLength > 0)
+    {
+        const int* pNextPush = pPush;
+        const int* pNextPop = pPop;
+
+        std::stack<int> stackData;
+
+        // 全部pop完就停止
+        while(pNextPop - pPop < nLength)
+        {
+            // 当辅助栈的栈顶元素不是要弹出的元素
+            // 先压入一些数字入栈
+            while(stackData.empty() || stackData.top() != *pNextPop)
+            {
+                // 如果所有数字都压入辅助栈了，退出循环
+                if(pNextPush - pPush == nLength)
+                    break;
+
+                stackData.push(*pNextPush);
+
+                pNextPush ++;
+            }
+
+            // 所有数字都已压入辅助栈却无法与弹出序列匹配就直接退出
+            if(stackData.top() != *pNextPop)
+                break;
+
+            stackData.pop();
+            pNextPop ++;
+        }
+
+        // 辅助栈空了，并且弹出序列也匹配到了最后，就说明匹配成功
+        if(stackData.empty() && pNextPop - pPop == nLength)
+            bPossible = true;
+    }
+
+    return bPossible;
+}
+```
+
