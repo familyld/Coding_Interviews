@@ -327,3 +327,57 @@ bool IsPopOrder(const int* pPush, const int* pPop, int nLength)
 }
 ```
 
+## 面试题23：从上往下打印二叉树
+
+### 题目
+
+> 从上往下打印出二叉树的每个结点，同一层的结点按照从左到右的顺序打印。例如输入下面的二叉树，则依次打印出 `8、6、10、5、7、9、11`。
+
+```
+      8
+    /   \
+   6     10
+  / \    / \
+ 5   7  9  11
+```
+
+> 二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```
+
+### 解析
+
+这题比较简单，其实就是BFS遍历二叉树，我们可以用队列进行模拟。每次出队队首元素，打印该元素，如果它有子结点，就把子结点放到队列尾部。然后继续下一次出队即可。
+
+```c++
+void PrintFromTopToBottom(BinaryTreeNode* pRoot)
+{
+    if(pRoot == NULL)
+        return;
+
+    std::deque<BinaryTreeNode *> dequeTreeNode;
+
+    dequeTreeNode.push_back(pRoot);
+
+    while(dequeTreeNode.size())
+    {
+        BinaryTreeNode *pNode = dequeTreeNode.front();
+        dequeTreeNode.pop_front();
+
+        printf("%d ", pNode->m_nValue);
+
+        if(pNode->m_pLeft)
+            dequeTreeNode.push_back(pNode->m_pLeft);
+
+        if(pNode->m_pRight)
+            dequeTreeNode.push_back(pNode->m_pRight);
+    }
+}
+```
