@@ -455,7 +455,7 @@ bool VerifySquenceOfBST(int sequence[], int length)
 
 ### 题目
 
-> 输入一棵二叉树和一个整数，打印出二叉树中结点值的和为输入整数的所有路径。从树的根节点开始往下一直到叶结点所经过的结点形成一条路径。二叉树结点的定义如下：
+> 输入一棵二叉树和一个整数，打印出二叉树中结点值的和为输入整数的所有路径。从树的根结点开始往下一直到叶结点所经过的结点形成一条路径。二叉树结点的定义如下：
 
 ```c++
 struct BinaryTreeNode
@@ -464,7 +464,7 @@ struct BinaryTreeNode
     BinaryTreeNode*        m_pLeft;
     BinaryTreeNode*        m_pRight;
 };
-```。
+```
 
 ### 解析
 
@@ -525,5 +525,107 @@ void FindPath(
     // 并在currentSum中减去当前结点的值
     currentSum -= pRoot->m_nValue;
     path.pop_back();
+}
+```
+
+## 面试题26：复杂链表的复制
+
+### 题目
+
+> 请实现函数 `ComplexListNode* Clone(ComplexListNode* pHead)`，复制一个复杂链表。在复杂链表中，每个结点除了有一个 `m_pNext` 指针指向下一个结点外，还有一个 `m_pSibling` 指向链表中的任意结点或者NULL。结点的C++定义如下：
+
+```c++
+struct ComplexListNode
+{
+    int                 m_nValue;
+    ComplexListNode*    m_pNext;
+    ComplexListNode*    m_pSibling;
+};
+```
+
+### 解析
+
+首先要清楚复制的意思，不是简单的声明一个头结点，然后赋值为给出链表的头结点就可以了。这样操作时依然会影响到原链表。要真的实现复制，就必须另外构造一个新的链表。
+
+最简单的做法是分两个步骤，第一步先逐个构造新链表的结点，赋值为原链表中对应的值；第二步，根据原链表中每个结点的指向，对新链表各结点的sibling指针复制。第二步的时间复杂度是O(n^2)，因为每次找新链表中的sibling，都需要遍历一次新链表。
+
+有没有O(n)的解法呢？有的。
+
+这个方法具体来说分为三步，要充分理解整个流程最好是画图出来对照着看：
+
+1. 在原链表上复制每个结点，把复制结点的next指针指向对应原结点的next结点，对应原结点的next指针指向复制结点。比如：<br>
+复制前：`1 -> 2 -> 3 -> 4`<br>
+复制后：`1 -> 1 -> 2 -> 2 -> 3 -> 3 -> 4 -> 4`
+
+2. 遍历一次复制后的链表，为每个复制结点设置sibling指针，因为复制的sibling结点就在原链表sibling结点的后面，所以可以在O(1)时间内找到。
+
+3. 把链表分割为原链表和复制链表，只需要遍历一遍链表，重新设置next指针即可。
+
+以上三个步骤都只需遍历一次链表，因此它的时间复杂度是O(n)的。一定要注意对空指针的处理。
+
+```c++
+ComplexListNode* Clone(ComplexListNode* pHead)
+{
+    CloneNodes(pHead);
+    ConnectSiblingNodes(pHead);
+    return ReconnectNodes(pHead);
+}
+
+void CloneNodes(ComplexListNode* pHead)
+{
+    ComplexListNode* pNode = pHead;
+    while(pNode != NULL)
+    {
+        ComplexListNode* pCloned = new ComplexListNode();
+        pCloned->m_nValue = pNode->m_nValue;
+        pCloned->m_pNext = pNode->m_pNext;
+        pCloned->m_pSibling = NULL;
+
+        pNode->m_pNext = pCloned;
+
+        pNode = pCloned->m_pNext;
+    }
+}
+
+void ConnectSiblingNodes(ComplexListNode* pHead)
+{
+    ComplexListNode* pNode = pHead;
+    while(pNode != NULL)
+    {
+        ComplexListNode* pCloned = pNode->m_pNext;
+        if(pNode->m_pSibling != NULL)
+        {
+            pCloned->m_pSibling = pNode->m_pSibling->m_pNext;
+        }
+
+        pNode = pCloned->m_pNext;
+    }
+}
+
+ComplexListNode* ReconnectNodes(ComplexListNode* pHead)
+{
+    ComplexListNode* pNode = pHead;
+    ComplexListNode* pClonedHead = NULL;
+    ComplexListNode* pClonedNode = NULL;
+
+    // 先分割出复制链表的链表头
+    if(pNode != NULL)
+    {
+        pClonedHead = pClonedNode = pNode->m_pNext;
+        pNode->m_pNext = pClonedNode->m_pNext;
+        pNode = pNode->m_pNext;
+    }
+
+    // 逐步把复制链表和原链表分割开来
+    while(pNode != NULL)
+    {
+        pClonedNode->m_pNext = pNode->m_pNext;
+        pClonedNode = pClonedNode->m_pNext;
+
+        pNode->m_pNext = pClonedNode->m_pNext;
+        pNode = pNode->m_pNext;
+    }
+
+    return pClonedHead;
 }
 ```
