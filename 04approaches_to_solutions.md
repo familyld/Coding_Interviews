@@ -690,7 +690,7 @@ void ConvertNode(BinaryTreeNode* pNode, BinaryTreeNode** pLastNodeInList)
     BinaryTreeNode *pCurrent = pNode;
 
     /*** 中序遍历BST ***/
-    // 先访问左子树
+    // 先访问左子树，把左子树转换为有序链表
     if (pCurrent->m_pLeft != NULL)
         ConvertNode(pCurrent->m_pLeft, pLastNodeInList);
 
@@ -700,10 +700,10 @@ void ConvertNode(BinaryTreeNode* pNode, BinaryTreeNode** pLastNodeInList)
     if(*pLastNodeInList != NULL)
         (*pLastNodeInList)->m_pRight = pCurrent;
 
-    // 访问当前结点
+    // 访问当前结点，链表尾变为当前结点
     *pLastNodeInList = pCurrent;
 
-    // 最后访问右子树
+    // 最后访问右子树，把右子树也转换为有序链表
     if (pCurrent->m_pRight != NULL)
         ConvertNode(pCurrent->m_pRight, pLastNodeInList);
 }
@@ -760,3 +760,63 @@ int main()
 
 **只有按引用传递指针变量时，在函数中修改指针指向才会生效**。
 
+## 面试题28：字符串的排列
+
+### 题目
+
+> 输入一个字符串，打印出该字符串中字符的所有排列。例如输入字符串abc，则打印出有字符a、b、c所能排列出来的所有字符串abc、acb、bac、bca、cab和cba。
+
+### 解析
+
+这题有一定难度，最好还是举例来分析，并检验代码是否能得到正确结果。
+
+思路是这样的：
+
+1. 依次选择字符串中一个字符作为首字符固定下来
+2. 从余下字符中依次选择一个字符作为第2个字符固定下来
+3. 从余下字符中依次选择一个字符作为第3个字符固定下来<br>
+... ...
+4. 当余下字符只剩下结束符`'\0'`时，整个字符串已经固定好，可以打印。
+5. 回到上一层中，尝试另一个字符
+
+采用递归的方式来实现就可以了。注意！在递归中，我们采取的方式是把固定部分以外的字符串的第一个字符依次替换为剩余字符中的一个，这就改变了原来的字符串，如果我们尝试完这一轮（即固定替换字符时的所有排列组合）递归后没有把字符换回来，回溯时就会发生错乱，从而影响到下一层（即固定部分最后一个字符的下一种可能）的递归（这里需要自己举例分析一下）。
+
+```c++
+void Permutation(char* pStr)
+{
+    if(pStr == NULL)
+        return;
+
+    Permutation(pStr, pStr);
+}
+
+void Permutation(char* pStr, char* pBegin)
+{
+    if(*pBegin == '\0')
+    {
+        printf("%s\n", pStr);
+    }
+    else
+    {
+        // 固定pBegin前的字符串，尝试pBegin处字符的所有可能取值
+        // 注意取值只能从pBegin及其后的字符中选取，否则就会和出现
+        // 重复打印。
+        for(char* pCh = pBegin; *pCh != '\0'; ++ pCh)
+        {
+            // 将字符交换到pBegin处
+            char temp = *pCh;
+            *pCh = *pBegin;
+            *pBegin = temp;
+
+            // 固定新的字符，继续递归直到固定所有字符
+            Permutation(pStr, pBegin + 1);
+
+            // 把pBegin换回来，否则会影响到下一轮的递归
+            // 从而造成重复打印字符串。
+            temp = *pCh;
+            *pCh = *pBegin;
+            *pBegin = temp;
+        }
+    }
+}
+```
