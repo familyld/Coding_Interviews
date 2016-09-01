@@ -629,3 +629,134 @@ ComplexListNode* ReconnectNodes(ComplexListNode* pHead)
     return pClonedHead;
 }
 ```
+
+## 面试题27：二叉搜索树与双向链表
+
+### 题目
+
+>  输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的双向链表。要求不能创建任何新的结点，只能调整书中结点指针的指向。比如二叉搜索树：
+
+```
+     10
+   /    \
+  6      14
+ / \    /  \
+4   8  12  16
+```
+
+转换为双向链表：
+
+```
+4 ⇆ 6 ⇆ 8 ⇆ 10 ⇆ 12 ⇆ 14 ⇆ 16
+```
+
+> 二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```
+
+### 解析
+
+我们可以首先观察一下BST和对应双向链表的关系，不难发现双向链表的顺序其实就是BST的中序遍历顺序。在转换的时候，我们按着中序遍历的顺序来走，把BST中每个结点的左子结点设置为遍历的上一个结点，右子结点设置为遍历的下一个结点。
+
+```c++
+BinaryTreeNode* Convert(BinaryTreeNode* pRootOfTree)
+{
+    BinaryTreeNode *pLastNodeInList = NULL;
+    // 注意这里是按引用传递指针，因为我们希望它在函数中
+    // 的修改能够保留下来。
+    ConvertNode(pRootOfTree, &pLastNodeInList);
+
+    // pLastNodeInList指向双向链表的尾结点，
+    // 我们需要返回头结点，一路往左即可
+    BinaryTreeNode *pHeadOfList = pLastNodeInList;
+    while(pHeadOfList != NULL && pHeadOfList->m_pLeft != NULL)
+        pHeadOfList = pHeadOfList->m_pLeft;
+
+    return pHeadOfList;
+}
+
+void ConvertNode(BinaryTreeNode* pNode, BinaryTreeNode** pLastNodeInList)
+{
+    if(pNode == NULL)
+        return;
+
+    BinaryTreeNode *pCurrent = pNode;
+
+    /*** 中序遍历BST ***/
+    // 先访问左子树
+    if (pCurrent->m_pLeft != NULL)
+        ConvertNode(pCurrent->m_pLeft, pLastNodeInList);
+
+    // 把左子结点设置为中序遍历的上一个结点
+    // 左子结点非空时，把左子结点的右子结点设置为当前结点
+    pCurrent->m_pLeft = *pLastNodeInList;
+    if(*pLastNodeInList != NULL)
+        (*pLastNodeInList)->m_pRight = pCurrent;
+
+    // 访问当前结点
+    *pLastNodeInList = pCurrent;
+
+    // 最后访问右子树
+    if (pCurrent->m_pRight != NULL)
+        ConvertNode(pCurrent->m_pRight, pLastNodeInList);
+}
+```
+
+如果对为什么要传递指针变量的地址还有疑惑，不妨看看下面这个程序的效果：
+
+```c++
+#include <cstdio>
+#include <iostream>
+using namespace std;
+
+void func1(int b, int* c)
+{
+    c = &b;
+    cout << "2: "  << *c << endl;
+}
+
+void func2(int b, int** c)
+{
+    *c = &b;
+    cout << "4: "  << **c << endl;
+}
+
+int main()
+{
+    int a = 5;
+    int b = 4;
+
+    int *c = &a;
+    cout << "1: " << *c << endl;
+
+    func1(b, c);
+
+    cout << "3: "  << *c << endl;
+
+    func2(b,&c);
+
+    cout << "5: "  << *c << endl;
+
+    return 0;
+}
+```
+
+结果：
+
+```c++
+1: 5
+2: 4
+3: 5
+4: 4
+5: 4
+```
+
+**只有按引用传递指针变量时，在函数中修改指针指向才会生效**。
+
