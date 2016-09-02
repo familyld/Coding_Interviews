@@ -60,3 +60,80 @@ bool CheckMoreThanHalf(int* numbers, int length, int number)
     return isMoreThanHalf;
 }
 ```
+
+## 面试题30：最小的k个数
+
+> 题目：输入n个整数，找出其中最小的k个数。例如输入4、5、1、6、2、7、3、8这8个数字，则最小的4个数字是1、2、3、4。
+
+### 解析
+
+和上一题那样，我们可以使用O(n)的基于partition函数的解法，因为题目只要求找出最小的k个数，没有说这k个数还得排序好返回。所以只要partition函数返回的下标是k-1就结束了，如果不是就根据情况缩小范围即可。
+
+```c++
+// ====================方法1====================
+void GetLeastNumbers_Solution1(int* input, int n, int* output, int k)
+{
+    if(input == NULL || output == NULL || k > n || n <= 0 || k <= 0)
+        return;
+
+    int start = 0;
+    int end = n - 1;
+    int index = Partition(input, n, start, end);
+    while(index != k - 1)
+    {
+        if(index > k - 1)
+        {
+            end = index - 1;
+            index = Partition(input, n, start, end);
+        }
+        else
+        {
+            start = index + 1;
+            index = Partition(input, n, start, end);
+        }
+    }
+
+    for(int i = 0; i < k; ++i)
+        output[i] = input[i];
+}
+```
+
+基于partition函数求解一个不好的地方就是会改变数组。有没有一种不改变数组但又时间复杂度相对小的解法呢？有的，就是**基于最大堆**的算法，复杂度为O(n logk)，k设定为堆的大小。
+
+具体来说，我们依次读入数组的n个整数。如果最大堆中已有的数字少于k个，则直接把这次读入的整数放入容器中；如果最大堆中已经满了，则把堆顶（最大元素）和这次读入的整数作比较，如果堆顶较小则不需修改，堆顶较大则删除堆顶，并且插入这次读入的整数。
+
+这里不讨论怎样实现最大堆，直接使用C++中的multiset来实现（multiset与set都是**基于红黑树实现**的，区别在于**multiset允许有重复元素**），可以把它看成一个序列，插入/删除都能在O(logk)的时间内完成，而且**能时刻保证序列中的数是有序的**。
+
+基于最大堆的解法比基于partition的解法要慢一些，但是！这种解法不仅不需要改变原数组（所有操作都在堆里进行），而且**适合处理海量数据**。因为数据太多时无法一次载入内存，只能从辅助存储空间（比如硬盘）分批读入，而基于最大堆的解法就允许我们每次读入一个数字，直到遍历完毕也就处理完了（当然，k还是不能超出内存的限制的）。
+
+```c++
+// ====================方法2====================
+typedef multiset<int, greater<int> >            intSet;
+typedef multiset<int, greater<int> >::iterator  setIterator;
+
+void GetLeastNumbers_Solution2(const vector<int>& data, intSet& leastNumbers, int k)
+{
+    leastNumbers.clear();
+
+    if(k < 1 || data.size() < k)
+        return;
+
+    vector<int>::const_iterator iter = data.begin();
+    for(; iter != data.end(); ++ iter)
+    {
+        if((leastNumbers.size()) < k)
+            leastNumbers.insert(*iter);
+
+        else
+        {
+            setIterator iterGreatest = leastNumbers.begin();
+
+            if(*iter < *(leastNumbers.begin()))
+            {
+                leastNumbers.erase(iterGreatest);
+                leastNumbers.insert(*iter);
+            }
+        }
+    }
+}
+```
