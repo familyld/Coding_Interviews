@@ -137,3 +137,51 @@ void GetLeastNumbers_Solution2(const vector<int>& data, intSet& leastNumbers, in
     }
 }
 ```
+
+## 面试题31：连续子数组的最大和
+
+### 题目
+
+> 输入一个整型数组，数组里有正数也有负数。数组中一个或连续的多个整数组成一个子数组。求所有子数组的和的最大值。要求时间复杂度为O(n)。
+
+### 解析
+
+这题初看之下，似乎有些难度。但实际上思路是很简单的，使用两个变量存储当前子数组的和（初始化为0）以及最大的和（初始化为0x80000000，即int类型的最小负数），求解的过程可以分为以下几种情况：
+
+1. 当前和为负，此时如果把新的数字并入连续子数组，所得的和还没有这个数字本身大。所以后续再并入其它数字组成数组的和要比单独这个数字并入后续数字组成数组的和小。于是把当前连续子数组舍弃掉，然后往空数组并入新的数字即可（也即把当前子数组的和设为新数字的值）；
+
+2. 当前和非负，这时直接累加新数字就可以了，即使新数字是负数，后续加入其它数字连成的数组也有可能产生更大的和；
+
+3. 如果新产生的和比最大和要大，那就更新最大和。
+
+最后，应该注意，**输入不合法时应返回什么**。这里设定返回0，并且为了和最大和为0的情况区分开，采用了一个全局标志来进行标识。
+
+```c++
+bool g_InvalidInput = false;
+
+int FindGreatestSumOfSubArray(int *pData, int nLength)
+{
+    if((pData == NULL) || (nLength <= 0))
+    {
+        g_InvalidInput = true;
+        return 0;
+    }
+
+    g_InvalidInput = false;
+
+    int nCurSum = 0;
+    int nGreatestSum = 0x80000000; // 初始化为最小负数
+    for(int i = 0; i < nLength; ++i)
+    {
+        if(nCurSum <= 0)
+            nCurSum = pData[i];
+        else
+            nCurSum += pData[i];
+
+        if(nCurSum > nGreatestSum)
+            nGreatestSum = nCurSum;
+    }
+
+    return nGreatestSum;
+}
+```
