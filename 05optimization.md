@@ -265,7 +265,7 @@ int NumberOf1Between1AndN_Solution2(int n)
         return 0;
 
     char strN[50];
-    sprintf(strN, "%d", n);
+    sprintf(strN, "%d", n); //int转字符串
 
     return NumberOf1(strN);
 }
@@ -307,5 +307,75 @@ int PowerBase10(unsigned int n)
         result *= 10;
 
     return result;
+}
+```
+
+## 面试题33：把数组排成最小的数
+
+### 题目
+
+> 输入一个正整数数组，把数组里所有数字拼接起来排成一个数，打印能拼接处的所有数字中最小的一个。例如输入数组 `{3,32,321}`，则打印出这3个数字能排成的最小数字321323.
+
+### 解析
+
+这题如果我们采用全排列的方式，n个数字就有n!个排列，时间复杂度相当大。
+
+那么这条题目实际我们做什么呢？其实是希望我们**实现一个比较函数**。
+
+在这里我们并不是简单地比较两个数字的大小，而是要比较它们拼接的时候谁排在前面能产生更小的数。要实现这样的功能，我们可以先将两个数字转换为字符串，然后使用strcat来进行拼接，使用strcmp来进行比较。
+
+实现了比较函数之后，我们可以使用qsort快速排序在O(n logn)的时间内完成排序，此时按顺序输出数组的数字得到的就是最小的数。
+
+在这里简单再减少以下几个函数：
+
+1. `sprintf(a, "%d", b)` 将int*类型的b转换为char*类型的a，也即整数数组转字符串；
+2. `strcpy(a,b)` 将b复制到a；
+3. `strcat(a,b)` 将b拼接到a后面；
+4. `strcmp(a,b)` 对a和b两个字符串从左向右逐个字符相比（按ASCII值大小相比较），直到出现不同的字符或遇'\0'为止。若a>b则返回正数，a<b则返回负数，相同则返回0。
+
+```c++
+// int型整数用十进制表示最多只有10位
+const int g_MaxNumberLength = 10;
+
+char* g_StrCombine1 = new char[g_MaxNumberLength * 2 + 1];
+char* g_StrCombine2 = new char[g_MaxNumberLength * 2 + 1];
+
+void PrintMinNumber(int* numbers, int length)
+{
+    if(numbers == NULL || length <= 0)
+        return;
+
+    char** strNumbers = (char**)(new int[length]);
+    for(int i = 0; i < length; ++i)
+    {
+        strNumbers[i] = new char[g_MaxNumberLength + 1];
+        sprintf(strNumbers[i], "%d", numbers[i]);
+    }
+
+    qsort(strNumbers, length, sizeof(char*), compare);
+
+    for(int i = 0; i < length; ++i)
+        printf("%s", strNumbers[i]);
+    printf("\n");
+
+    for(int i = 0; i < length; ++i)
+        delete[] strNumbers[i];
+    delete[] strNumbers;
+}
+
+// 如果[strNumber1][strNumber2] > [strNumber2][strNumber1], 返回值大于0
+// 如果[strNumber1][strNumber2] = [strNumber2][strNumber1], 返回值等于0
+// 如果[strNumber1][strNumber2] < [strNumber2][strNumber1], 返回值小于0
+int compare(const void* strNumber1, const void* strNumber2)
+{
+    // [strNumber1][strNumber2]
+    strcpy(g_StrCombine1, *(const char**)strNumber1);
+    strcat(g_StrCombine1, *(const char**)strNumber2);
+
+    // [strNumber2][strNumber1]
+    strcpy(g_StrCombine2, *(const char**)strNumber2);
+    strcat(g_StrCombine2, *(const char**)strNumber1);
+
+    return strcmp(g_StrCombine1, g_StrCombine2);
 }
 ```
