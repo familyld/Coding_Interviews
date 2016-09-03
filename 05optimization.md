@@ -379,3 +379,64 @@ int compare(const void* strNumber1, const void* strNumber2)
     return strcmp(g_StrCombine1, g_StrCombine2);
 }
 ```
+
+## 面试题34：丑数
+
+### 题目
+
+> 我们把只包含因子2、3和5的数称作丑数（Ugly Number）。求按小到大的顺序的第1500个丑数。例如6、8都是丑数，但14不是，因为它包含因子7。习惯上我们把1当做第一个丑数。
+
+### 解析
+
+最简单的解法，写一个函数用于判断是否丑数（需要求模和做除法），然后从1开始依次判断是否丑数，直到得到1500个丑数时停止。这种方法的时间开销很大，因为即使一个数不是丑数，我们仍然要对它进行判断，做求模和除法这些开销较大的操作。
+
+在允许使用额外空间时，我们不妨**用空间换时间**。按照丑数的定义，**丑数应该是另一个丑数乘以2、3或者5的结果（1除外）**。所以我们可以创建一个数组，里面的数字是排好序的丑数，每个丑数都是前面的丑数乘以2、3或者5得到的。
+
+现在关键在于**怎么确保数组里的丑数是排好序的**？
+
+假设我们有一个排好序的丑数数组，最大的一个丑数为M，则我们在生成下一个丑数时，我们会把已有丑数都乘2，乘3和乘5，这会产生一些小于等于M的数字，但由于我们是按序生成的，所以我们并不care这些数字。要继续有序生成，我们需要找到第一个比M大的数字。对于乘2操作来说，把第一个比M大的数字的数字记为M2；对于乘3操作来说，把第一个比M大的数字的数字记为M3；对于乘5操作来说，把第一个比M大的数字的数字记为M5。那么数组的下一个丑数必然是M2，M3，M5这三个数中的最小者。
+
+在实现的时候，我们可以用三个指针来分别记录M2/2，M3/3和M5/5的坐标，在下一次产生丑数时，我们就不需要再从1开始逐个数乘2，乘3和乘5了，因为下一个丑数必然是这三个指针以后的数乘2，乘3或乘5产生的。
+
+```c++
+int GetUglyNumber_Solution2(int index)
+{
+    if(index <= 0)
+        return 0;
+
+    int *pUglyNumbers = new int[index];
+    pUglyNumbers[0] = 1;
+    int nextUglyIndex = 1;
+
+    int *pMultiply2 = pUglyNumbers;
+    int *pMultiply3 = pUglyNumbers;
+    int *pMultiply5 = pUglyNumbers;
+
+    while(nextUglyIndex < index)
+    {
+        int min = Min(*pMultiply2 * 2, *pMultiply3 * 3, *pMultiply5 * 5);
+        pUglyNumbers[nextUglyIndex] = min;
+
+        while(*pMultiply2 * 2 <= pUglyNumbers[nextUglyIndex])
+            ++pMultiply2;
+        while(*pMultiply3 * 3 <= pUglyNumbers[nextUglyIndex])
+            ++pMultiply3;
+        while(*pMultiply5 * 5 <= pUglyNumbers[nextUglyIndex])
+            ++pMultiply5;
+
+        ++nextUglyIndex;
+    }
+
+    int ugly = pUglyNumbers[nextUglyIndex - 1];
+    delete[] pUglyNumbers;
+    return ugly;
+}
+
+int Min(int number1, int number2, int number3)
+{
+    int min = (number1 < number2) ? number1 : number2;
+    min = (min < number3) ? min : number3;
+
+    return min;
+}
+```
