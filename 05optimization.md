@@ -440,3 +440,50 @@ int Min(int number1, int number2, int number3)
     return min;
 }
 ```
+
+## 面试题35：第一个只出现一次的字符
+
+### 题目
+
+> 在字符串中找出第一个只出现一次的字符。如输入 `"abaccdeff"`，则输出 `'b'`。
+
+### 解析
+
+对于统计次数的题目，我们很容易想到使用哈希表来实现。c++的标准模版库中并没有哈希表的实现，当我们可以利用一个int型数组来实现，因为char类型中每个字符是8bits的，也即有256种可能，我们可以用一个长度为256的数组来模拟。
+
+有了哈希表，我们只需要扫描2次字符串就可以实现题目要求了，也即时间复杂度为O(n)。具体来说，第一次扫描，我们统计每个字符的次数；第二次扫描则搜索哈希表中的次数，第一次出现次数为1时就代表找到了。
+
+特别注意一下，哈希表要进行初始化，另外，如果没有只出现1次的字符，要明确该返回什么。
+
+```c++
+char FirstNotRepeatingChar(char* pString)
+{
+    if(pString == NULL)
+        return '\0';
+
+    const int tableSize = 256;
+    unsigned int hashTable[tableSize];
+    // 初始化哈希表
+    for(unsigned int i = 0; i<tableSize; ++ i)
+        hashTable[i] = 0;
+
+    // 第一次扫描字符串
+    // 统计各字符的出现数目
+    char* pHashKey = pString;
+    while(*(pHashKey) != '\0')
+        hashTable[*(pHashKey++)] ++;
+
+    // 第二次扫描字符串
+    // 依次把字符作为key检索哈希表
+    pHashKey = pString;
+    while(*pHashKey != '\0')
+    {
+        if(hashTable[*pHashKey] == 1)
+            return *pHashKey;
+
+        pHashKey++;
+    }
+
+    return '\0';
+}
+```
