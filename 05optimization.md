@@ -185,3 +185,127 @@ int FindGreatestSumOfSubArray(int *pData, int nLength)
     return nGreatestSum;
 }
 ```
+
+## 面试题32：从1到n整数中1出现的次数
+
+### 题目
+
+> 输入一个整数n，求从1到n这n个整数的十进制表示中1出现的次数。例如输入12，从1到12这些整数中包含1的数字有1，10，11和12，1一共出现了5次。
+
+### 解析
+
+不考虑时间复杂度，最简单的方法就是逐个数字判断，每次判断完各位是否1之后把数字除以10，当数字变为0时结束。
+
+```c++
+// ====================方法一====================
+int NumberOf1(unsigned int n);
+
+int NumberOf1Between1AndN_Solution1(unsigned int n)
+{
+    int number = 0;
+
+    for(unsigned int i = 1; i <= n; ++ i)
+        number += NumberOf1(i);
+
+    return number;
+}
+
+int NumberOf1(unsigned int n)
+{
+    int number = 0;
+    while(n) // 当n不为0时
+    {
+        if(n % 10 == 1)
+            number ++;
+
+        n = n / 10;
+    }
+
+    return number;
+}
+```
+
+这里介绍一种考虑数字规律的O(log n)方法，也即复杂度视输入数字n的位数（等于log10(n)+1下取整）而定。
+
+将求从1到n这n个整数的十进制表示中1出现的次数这个任务分为三个子任务来完成：
+
+1. 统计 n去掉最高位+1 ~ n 这段范围内最高位出现的1
+2. 统计 n去掉最高位+1 ~ n 这段范围内除最高位之外出现的1
+3. 统计 1 ~ n去掉最高位 这段范围内出现的1
+
+那么具体来说怎么完成呢？
+
+首先，对于 n去掉最高位+1 ~ n 这段范围内最高位出现的1，有两种情况：
+
+1. 最高位大于1，此时所有最高位为1的情况都包含了，最高位为1的次数等于 `10^(位数-1)`
+    - 比如22，十位为1的10~19全部都被包含了，十位为1的次数是 `10^(2-1)=10（次）`
+2. 最高位等于1，此时最高位为1的次数等于 `n去掉最高位+1`
+    - 比如12，去掉十位是2，十位为1的次数是 `2+1=3（次）`
+
+然后，对于 n去掉最高位+1 ~ n 这段范围内除最高位之外出现的1，我们使用公式 `最高位*（位数-1）*10^(位数-2)` 次方。
+
+首先，假设最高位数字为k，则 n去掉最高位+1 ~ n 这段范围可以被等分为k份。例如n=3721，则k=3，此时 722~3721 可以等分为3份，也即 722~1721，1722~2721 以及 2722~3721。又因为对于这3段范围来说，除最高位外出现1的次数都是相同的（最高位已经在第一个子任务中算好了，这里不用管），所以我们只需要算出其中一段就可以了，这是公式第一项的意义。
+
+然后，假设n是一个d位数，则在去掉最高位后剩下的就是d-1位数字，我们在d-1位数字中选择一位固定为1，有d-1种选择，这是公式第二项的意义。
+
+最后，在固定了其中一位数字为1之后，剩余的d-2位数字按照排列组合，每位数字都可以选择0~9中的一个，所以一共有 `10^(d-2)` 中组合，这是公式第三项的意义。
+
+看到这里可能还有小小的迷糊，按照上面排列组合的方法计算，那么3111这个数在子任务2中不就被计算了3次吗？事实上，这并没有错，因为题目求得是1出现的次数，而不是出现1的数字有多少个？所以，除最高位外3111出现了3个1，在子任务2中计数为3是正确的。
+
+最后的最后，我们还要求子任务3，统计 1 ~ n去掉最高位 这段范围内出现的1，这个使用递归求解就可以了，也即把n去掉最高位作为下一次递归传入的n。注意设置好终止条件，最好到达个位数时就停止了。若个位为0，则返回0；若各位大于0，则返回1。
+
+```c++
+// ====================方法二====================
+int NumberOf1(const char* strN);
+int PowerBase10(unsigned int n);
+
+int NumberOf1Between1AndN_Solution2(int n)
+{
+    if(n <= 0)
+        return 0;
+
+    char strN[50];
+    sprintf(strN, "%d", n);
+
+    return NumberOf1(strN);
+}
+
+int NumberOf1(const char* strN)
+{
+    if(!strN || *strN < '0' || *strN > '9' || *strN == '\0')
+        return 0;
+
+    int first = *strN - '0';
+    unsigned int length = static_cast<unsigned int>(strlen(strN));
+
+    if(length == 1 && first == 0) // 个位为0
+        return 0;
+
+    if(length == 1 && first > 0) // 个位为1
+        return 1;
+
+    // 假设strN是"21345"
+    // numFirstDigit是数字10000-19999的第一个位中1的数目
+    int numFirstDigit = 0;
+    if(first > 1)
+        numFirstDigit = PowerBase10(length - 1);
+    else if(first == 1)
+        numFirstDigit = atoi(strN + 1) + 1;
+
+    // numOtherDigits是01346-21345除了第一位之外的数位中1的数目
+    int numOtherDigits = first * (length - 1) * PowerBase10(length - 2);
+    // numRecursive是1-1345中1的数目
+    int numRecursive = NumberOf1(strN + 1);
+
+    return numFirstDigit + numOtherDigits + numRecursive;
+}
+
+int PowerBase10(unsigned int n)
+{
+    int result = 1;
+    for(unsigned int i = 0; i < n; ++ i)
+        result *= 10;
+
+    return result;
+}
+```
