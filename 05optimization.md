@@ -520,7 +520,7 @@ char FirstNotRepeatingChar(char* pString)
 6. 子数组 `5,7` 和 `4,6`，7比6大，**逆序对加二**，7放入辅助数组。5比6小，6放入辅助数组。5比4大，逆序对加一，5放入辅助 数组，子数组1空了，把子数组2的数字也放入辅助数组，得到辅助数组 `4,5,6,7`；
 7. 合并完成，得到递增数组 `4,5,6,7`，逆序对数目为 `1+1+2+1=5（个）`。
 
-当然最好还是自己拿着纸举例分析来体验一下。假设我们把每一次归并中，用于合并的两个子数组称为数据数组，合并好的数组称为辅助数组。那么在转化为代码的过程中，**合并出这一轮的辅助数组用的是在获取这一轮的两个数据数组时用的辅助数组**。比方说上面例子中，步骤3和步骤5得到的辅助数组 `5,7` 和辅助数组 `4,6` 就成为了步骤6的两个数组数组。
+当然最好还是自己拿着纸举例分析来体验一下。假设我们把每一次归并中，用于合并的两个子数组称为数据数组，合并好的数组称为辅助数组。那么在转化为代码的过程中，**合并出这一轮辅助数组用的是在获取这一轮两个数据数组时用的辅助数组**。比方说上面例子中，步骤6用的两个数据数组其实就是步骤3和步骤5中得到的辅助数组 `5,7` 和辅助数组 `4,6`。
 
 **那我们是否需要使用多个长度不一的辅助数组呢**？不是的，我们用一个和输入数组等长的辅助数组就够了，只是用的方式有一点巧妙。在传递参数时，把子数组在原数组中start和end的索引也作为参数传递就可以了，这样相当于截取了原数组的一段。
 
@@ -588,5 +588,86 @@ int InversePairsCore(int* data, int* copy, int start, int end)
 
     // 逆序对总数由三部分组成，两个子数组各自的逆序对数目加上合并它们产生的逆序对数目
     return left + right + count;
+}
+```
+
+## 面试题37：两个链表的第一个公共结点
+
+### 题目
+
+> 输入两个链表，找出它们的第一个公共结点。链表结点定义如下：
+
+```c++
+struct ListNode
+{
+    int       m_nValue;
+    ListNode* m_pNext;
+};
+```
+
+### 解析
+
+最呆萌的做法就是依次遍历其中一个链表的结点，每访问一个结点就遍历一次另一个链表，知道找到两个链表的公共结点。如果两个链表长度分别为m和n，这种方法的时间复杂度就是O(mn)。
+
+当然不用这么笨的方法.. 我们先观察一下两个有公共结点的链表有什么特点：
+
+```c++
+1 -> 2 -> 3
+           \
+            6 -> 7
+           /
+     4 -> 5
+```
+
+不难发现，**两个有公共结点的链表从第一个公共结点到链表尾都是一样的**。而且，如果两个链表相差k步，我们在长链表上先走k步，然后再同时遍历两个链表，就能很容易地找到第一个公共结点（如果没有则会一起走到链表尾的NULL）。
+
+基于这个思路，实现代码并不难：
+
+```c++
+ListNode* FindFirstCommonNode( ListNode *pHead1, ListNode *pHead2)
+{
+    // 得到两个链表的长度
+    unsigned int nLength1 = GetListLength(pHead1);
+    unsigned int nLength2 = GetListLength(pHead2);
+    int nLengthDif = nLength1 - nLength2;
+
+    ListNode* pListHeadLong = pHead1;
+    ListNode* pListHeadShort = pHead2;
+    if(nLength2 > nLength1)
+    {
+        pListHeadLong = pHead2;
+        pListHeadShort = pHead1;
+        nLengthDif = nLength2 - nLength1;
+    }
+
+    // 先在长链表上走几步，再同时在两个链表上遍历
+    for(int i = 0; i < nLengthDif; ++ i)
+        pListHeadLong = pListHeadLong->m_pNext;
+
+    while((pListHeadLong != NULL) &&
+        (pListHeadShort != NULL) &&
+        (pListHeadLong != pListHeadShort))
+    {
+        pListHeadLong = pListHeadLong->m_pNext;
+        pListHeadShort = pListHeadShort->m_pNext;
+    }
+
+    // 得到第一个公共结点
+    ListNode* pFisrtCommonNode = pListHeadLong;
+
+    return pFisrtCommonNode;
+}
+
+unsigned int GetListLength(ListNode* pHead)
+{
+    unsigned int nLength = 0;
+    ListNode* pNode = pHead;
+    while(pNode != NULL)
+    {
+        ++ nLength;
+        pNode = pNode->m_pNext;
+    }
+
+    return nLength;
 }
 ```
