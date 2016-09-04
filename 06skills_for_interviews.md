@@ -175,3 +175,77 @@ bool IsBalanced(BinaryTreeNode* pRoot, int* pDepth)
     return false;
 }
 ```
+
+## 面试题40：数组中只出现一次的数字
+
+### 题目
+
+> 一个整型数组里除了两个数字之外，其他的数字都出现了两次。请写程序找出这两个只出现一次的数字。要求时间复杂度是O(n)，空间复杂度是O(1)。
+
+### 解析
+
+第一次看这条题，一点思路都没有，看书中给出的解法时真的被惊艳到了。
+
+首先，我们要明白题目所说的**只出现一次到底意味着什么**？如果我们把题目换成只有一个出现一次的数字，可以怎么找出来呢？
+
+这里利用的是**异或的特性**，**两个相同的数异或结果为0，两个不同的数异或结果的二进制表示至少有一位为1**。举个例子，比方说要在数组 `20,10,20,30,30` 中找出只出现一次的10，那么我们只需要求整个数组异或的结果就可以了：
+
+```c++
+20 xor 10 xor 20 xor 30 xor 30 = 10
+```
+
+结果就是只出现一次的数字。
+
+但数组中有两个只出现一次的数字，这要怎么找呢？
+
+1. 首先对整个数组进行异或，所得结果就是那两个只出现一次的数的异或结果，因为这两个数字是不同的，所以结果的二进制表示至少有一位为1；
+2. 从异或结果的二进制表示中找到从右往左第一个为1的位置，它表明**两个只出现一次的数字的二进制表示在这一位上是不同的**；
+3. 按照步骤2中第一个为1的位置将数组分为两部分，一部分在该位置为1，另一部分在该位置为0；
+4. 因为同一个数字的二进制表示也是相同的，所以步骤3划分的数组中，同一个数字会被分到同一边，也即划分后，**问题变成数组中只有一个出现一次的数字，其他数字都出现两次，如何找出那个只出现一次的数字**。
+5. 分别对两个数组求异或结果，得到问题的解。
+
+```c++
+void FindNumsAppearOnce(int data[], int length, int* num1, int* num2)
+{
+    if (data == NULL || length < 2)
+        return;
+
+    // 对整个数组求异或结果
+    int resultExclusiveOR = 0;
+    for (int i = 0; i < length; ++ i)
+        resultExclusiveOR ^= data[i];
+
+    // 找出异或结果二进制表示中第一个1出现的位置
+    unsigned int indexOf1 = FindFirstBitIs1(resultExclusiveOR);
+
+    // 按照indexOf1划分数组并分别求异或结果（也即两个只出现一次的数字）
+    *num1 = *num2 = 0;
+    for (int j = 0; j < length; ++ j)
+    {
+        if(IsBit1(data[j], indexOf1))
+            *num1 ^= data[j];
+        else
+            *num2 ^= data[j];
+    }
+}
+
+// 找到num从右边数起第一个是1的位
+unsigned int FindFirstBitIs1(int num)
+{
+    int indexBit = 0;
+    while (((num & 1) == 0) && (indexBit < 8 * sizeof(int)))
+    {
+        num = num >> 1;
+        ++ indexBit;
+    }
+
+    return indexBit;
+}
+
+// 判断数字num的第indexBit位是不是1
+bool IsBit1(int num, unsigned int indexBit)
+{
+    num = num >> indexBit;
+    return (num & 1);
+}
+```
