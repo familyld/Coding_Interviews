@@ -120,3 +120,58 @@ int TreeDepth(BinaryTreeNode* pRoot)
     return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
 }
 ```
+
+## 面试题39_2：判断是否平衡二叉树
+
+### 题目
+
+> 输入一棵二叉树的根结点，判断该树是不是平衡二叉树。如果某二叉树中任意结点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+
+### 解析
+
+有了上一题的思路，我们很容易想到这一题可以逐个结点来判断是否平衡二叉树，也即对每个结点都检查左右子树的深度是否相差1，但是这个做法并不够好，因为它需要多次遍历同一结点，比如二叉树：
+
+```c++
+      10
+     /  \
+    7    8
+   /    / \
+  5    4   3
+ /
+2
+```
+
+我们在检查根结点10时，需要计算以7和8为根结点的左右子树的深度，按照递归的方式，我们需要先计算出以5，4，3为根结点的这几棵子树的深度。由于以7和8为根结点的左右子树的深度不超过1，所以继续检查。这时我们需要根结点7了，此时又需要再计算一次以5为根结点的子树的深度，所以说**产生了重复计算，效率不高**。
+
+这里介绍一种只需要遍历每个结点1次的方法。在上面的方法中，我们是由上到下逐层检查，所以每次都需要对当前层下面的层计算一次。只要我们转换一下思路，**由下往上逐层检查，并且把树深作为参数传递然后累加**，就不需要作重复的计算了，所有结点都只需访问1次。
+
+```c++
+bool IsBalanced_Solution2(BinaryTreeNode* pRoot)
+{
+    int depth = 0;
+    return IsBalanced(pRoot, &depth);
+}
+
+bool IsBalanced(BinaryTreeNode* pRoot, int* pDepth)
+{
+    if(pRoot == NULL)
+    {
+        *pDepth = 0;
+        return true;
+    }
+
+    int left, right;
+    if(IsBalanced(pRoot->m_pLeft, &left)
+        && IsBalanced(pRoot->m_pRight, &right))
+    {
+        int diff = left - right;
+        if(diff <= 1 && diff >= -1)
+        {
+            *pDepth = 1 + (left > right ? left : right);
+            return true;
+        }
+    }
+
+    return false;
+}
+```
