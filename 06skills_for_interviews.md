@@ -81,3 +81,42 @@ int GetLastK(int* data, int length, int k, int start, int end)
     return GetLastK(data, length, k, start, end);
 }
 ```
+
+## 面试题39_1：二叉树的深度
+
+### 题目
+
+> 输入一棵二叉树的根节点，求该树的深度。从根结点到叶结点依次经过的结点（含根、叶结点）形成树的一条路径，最长路径的长度为树的深度。二叉树结点的定义如下：
+
+```c++
+struct BinaryTreeNode
+{
+    int                    m_nValue;
+    BinaryTreeNode*        m_pLeft;
+    BinaryTreeNode*        m_pRight;
+};
+```
+
+### 解析
+
+第一次看到这题，可能还有点迷茫，需要所有路径都走一次然后取最长路径的长度吗？并不是这样的，其实这题很简单，我们可以从另一个角度来理解树的深度：
+
+- 如果树只有一个根结点，则深度为1；
+- 如果根结点只有左子树，则深度为左子树深度+1；
+- 如果根结点只有右子树，则深度为右子树深度+1；
+- 如果根结点既有左子树，又有右子树，则深度为左右子树深度的较大值+1；
+
+就是这么四种情况，我们可以非常容易地写出递归实现：
+
+```c++
+int TreeDepth(BinaryTreeNode* pRoot)
+{
+    if(pRoot == NULL)
+        return 0;
+
+    int nLeft = TreeDepth(pRoot->m_pLeft);
+    int nRight = TreeDepth(pRoot->m_pRight);
+
+    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
+}
+```
