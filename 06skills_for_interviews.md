@@ -301,3 +301,67 @@ bool FindNumbersWithSum(int data[], int length, int sum,
     return found;
 }
 ```
+
+## 面试题41_2：和为s的连续正数序列
+
+### 题目
+
+> 输入一个正数s，打印出所有和为s的连续正数序列（至少会有两个数）。例如输入15，由于 `1+2+3+4+5 = 4+5+6 = 7+8 = 15`，所以结果打印出3个连续序列 `1~5`、`4~6`和`7~8`。
+
+### 解析
+
+首先审审题，这里不再给出数组，而是说找出**连续正数数列**，也即从 `1,2,3,4,.....` 这个正数序列中找。而所谓“序列”，指的是至少要包含两个数字。还有一点就是题目要求**打印出所有**符合要求的序列。
+
+因为正数序列延伸到正无穷，我们自然没有办法说从序列最大值开始减少。我们转换一种思路，维护small和big两个指针来指向当前序列最小和最大的数，从和最小的序列开始找起，也即只包含两个整数的序列 `1,2`（small初始化为1，big初始化为2）。
+
+- 当前序列和小于s时，通过往后移动big来把新的数字补充进序列，使得序列的和能更接近s。
+- 当前序列和大于s时，通过往后移动small来把小的数字丢掉，使得序列的和能更接近s。
+- 当前序列和为s时，打印序列，并往后移动big来把新的数字补充进序列来打破平衡，使得small可以往后移动，从而有机会找到符合要求的新序列。
+
+注意了，什么时候停止移动呢？我们不难发现，当small大于 `(1 + s) / 2` 之后，任意两个数和都必定大于s，所以终止条件就是small大于等于 `(1 + s) / 2`。
+
+还有一个小trick，计算序列和是一件挺麻烦的事（虽然可以用公式，但是乘除法还是开销蛮大的）。这里我们不需要这样做，因为新序列和旧序列只是相差一个元素而已。我们维护一个变量curSum，在删除/补充数字时，把curSum更新一下就可以了。
+
+```c++
+void FindContinuousSequence(int sum)
+{
+    if(sum < 3) // 不存在和小于3的连续正数序列，直接返回
+        return;
+
+    int small = 1;
+    int big = 2;
+    int middle = (1 + sum) / 2;
+    int curSum = small + big;
+
+    // small超过middle以后就不可能再有符合要求的序列产生了
+    // 因为此后的任意两个数和都必定大于sum
+    while(small < middle)
+    {
+        if(curSum == sum)
+            PrintContinuousSequence(small, big);
+
+        while(curSum > sum && small < middle)
+        {
+            curSum -= small;
+            small ++;
+
+            if(curSum == sum)
+                PrintContinuousSequence(small, big);
+        }
+
+        // 加大big有两个意义
+        // 一是curSum小于sum时补充序列，使得序列的和能更接近sum
+        // 二是curSum等于sum时打破平衡，使得small可以往后移动，找到符合要求的新序列
+        big ++;
+        curSum += big;
+    }
+}
+
+void PrintContinuousSequence(int small, int big)
+{
+    for(int i = small; i <= big; ++ i)
+        printf("%d ", i);
+
+    printf("\n");
+}
+```
