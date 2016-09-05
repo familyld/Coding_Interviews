@@ -233,9 +233,10 @@ void FindNumsAppearOnce(int data[], int length, int* num1, int* num2)
 unsigned int FindFirstBitIs1(int num)
 {
     int indexBit = 0;
+    // 数字的二进制表示最右边为0，且当前位数不超过int型表示的范围（8*4bytes = 32bits）
     while (((num & 1) == 0) && (indexBit < 8 * sizeof(int)))
     {
-        num = num >> 1;
+        num = num >> 1; //右移一位
         ++ indexBit;
     }
 
@@ -247,5 +248,56 @@ bool IsBit1(int num, unsigned int indexBit)
 {
     num = num >> indexBit;
     return (num & 1);
+}
+```
+
+## 面试题41_1：和为s的两个数字
+
+### 题目
+
+> 输入一个递增排序的数组和一个数字s，在数组中查找两个数，使得它们的和正好是s。如果有多对数字的和等于s，输出任意一对即可。
+
+### 解析
+
+因为可以输出任意一对，所以只要找到一对就可以了。又因为这是一个递增数组，所以我们只需要维护两个指针behind和ahead，前者从数组开头（最小数字）开始往后扫描，后者从数组末尾（最大数字）开始往前扫描。每一次我们比较两个指针所指数字之和与s的大小关系，如果比s大，我们就往前移动ahead；如果比s小，我们就往后移动behind；如果和s相等，就进行输出。
+
+这个算法的时间复杂度是O(n)，当ahead与behind相遇时，搜索就结束了，最多也只是扫描一次整个数组。如果数组中确实有和为s的一对数字，这个算法是必然能找到的。因为移动指针时，选择的指针和移动的方向都是必然的，并不需要ahead往后或者behind往前，因为外侧的数字都是已经排除掉，不可能构成指定的和的，这需要自己分析理解一下。
+
+还是不偷懒了，简单举个例子吧.. 比方说有数组 `1,2,4,7,11,15`，指定s为15。
+
+1. `1+15=16 > 15`，往前移动ahead，这很好理解，因为behind已经在最前了，自然不可能再往前移动它来减少和值；
+2. `1+11=12 < 15`，往后移动behind。为什么不往后移动ahead呢？很简单，因为前面第一步已经验证了`1+15=16 > 15`，正是因为这样才把ahead往前移的，自然就没有理由又把它移回去了；
+3. `2+11=13 < 15`，往后移动behind。为什么不往后移动ahead呢？也很简单，因为比2小的1和15加起来都超过s了，那么2加上15的和就更大了，所以不可能往后移动ahead；
+4. `4+11=15 = 15`，找到了，完成查找。
+
+```c++
+bool FindNumbersWithSum(int data[], int length, int sum,
+                        int* num1, int* num2)
+{
+    bool found = false;
+    if(length < 1 || num1 == NULL || num2 == NULL)
+        return found;
+
+    int ahead = length - 1;
+    int behind = 0;
+
+    while(ahead > behind)
+    {
+        long long curSum = data[ahead] + data[behind];
+
+        if(curSum == sum)
+        {
+            *num1 = data[behind];
+            *num2 = data[ahead];
+            found = true;
+            break;
+        }
+        else if(curSum > sum)
+            ahead --;
+        else
+            behind ++;
+    }
+
+    return found;
 }
 ```
