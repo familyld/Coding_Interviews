@@ -436,3 +436,66 @@ char* ReverseSentence(char *pData)
     return pData;
 }
 ```
+
+## 面试题42_2：左旋转字符串
+
+### 题目
+
+> 字符串的左旋转操作是把字符串前面的若干个字符转移到字符串的尾部。请定义一个函数实现字符串左旋转操作的功能。比如输入字符串 `"abcdefg"` 和数字2，该函数将返回左旋转2位得到的结果 `"cdefgab"`。
+
+### 解析
+
+这题很有意思，我们先再分析一下上一题翻转单词顺序，比方说有一个句子 `Hello world`，上一题就是把这个句子处理为 `world Hello`。不看空格的话，这实际上可以看作是把一部分字符转移到字符串的尾部，也即对这个字符串左旋了5位。
+
+有了这样的启发，不难发现，我们可以先按左旋的位数把数组分割为两部分，然后分别翻转这两部分，最后翻转整个数组就完成左旋转这个操作了。
+
+书中给出的代码是按照这样的思路实现的，和上一题有一点点差别，因为上一题是先翻转整个字符串，再分别翻转各个部分。这个顺序调转一下其实也是可以的，这里先翻转部分，再翻转整体的原因是先翻转整体之后，左旋位数所指的位置就不是划分两个部分的地方了。
+
+还是举个例子吧~避免自己再看到的时候会懵圈。还是 `helloworld`，左旋2位，那么划分两部分的位置就在e和l之间，正确答案是 `lloworldhe`。
+
+- 如果先翻转整个字符串，字符串变为 `dlrowolleh`，2指向的地方就变成了l和r之间了，根据这个划分来翻转部分得到的是错误答案 `ldhellowor`。当然，其实真要算出正确的划分位置也不难..就是字符串长度10-左旋位数2=8嘛..可以解出答案 `lloworldhe`，所以还是可以正确划分的，改改就好了。
+
+
+- 如果先翻转部分，按左旋位数2划分出两个部分，分别翻转后，字符串变为 `ehdlrowoll`，这时再翻转整个字符串，就得到了正确答案 `lloworldhe`。
+
+```c++
+// 翻转两个字符指针之间的内容
+void Reverse(char *pBegin, char *pEnd)
+{
+    if(pBegin == NULL || pEnd == NULL)
+        return;
+
+    while(pBegin < pEnd)
+    {
+        char temp = *pBegin;
+        *pBegin = *pEnd;
+        *pEnd = temp;
+
+        pBegin ++, pEnd --;
+    }
+}
+
+char* LeftRotateString(char* pStr, int n)
+{
+    if(pStr != NULL)
+    {
+        int nLength = static_cast<int>(strlen(pStr));
+        if(nLength > 0 && n > 0 && n < nLength)
+        {
+            char* pFirstStart = pStr;
+            char* pFirstEnd = pStr + n - 1;
+            char* pSecondStart = pStr + n;
+            char* pSecondEnd = pStr + nLength - 1;
+
+            // 翻转字符串的前面n个字符
+            Reverse(pFirstStart, pFirstEnd);
+            // 翻转字符串的后面部分
+            Reverse(pSecondStart, pSecondEnd);
+            // 翻转整个字符串
+            Reverse(pFirstStart, pSecondEnd);
+        }
+    }
+
+    return pStr;
+}
+```
