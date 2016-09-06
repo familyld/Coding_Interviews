@@ -365,3 +365,74 @@ void PrintContinuousSequence(int small, int big)
     printf("\n");
 }
 ```
+
+## 面试题42_1：翻转单词顺序
+
+### 题目
+
+> 输入一个英文句子，翻转句子中单词的顺序，但单词内字符的顺序不变。为简单起见，标点符号和普通字母一样处理。例如输入字符串 `"I am a student."`，则输出 `"student. a am I"`。
+
+### 解析
+
+这条题我们可以分为两步处理：
+
+1. 翻转整个句子
+2. 以空格和结束符 `'\0'` 划分，逐个单词翻转
+
+写成代码实现：
+
+```c++
+// 翻转两个字符指针之间的内容
+void Reverse(char *pBegin, char *pEnd)
+{
+    if(pBegin == NULL || pEnd == NULL)
+        return;
+
+    while(pBegin < pEnd)
+    {
+        char temp = *pBegin;
+        *pBegin = *pEnd;
+        *pEnd = temp;
+
+        pBegin ++, pEnd --;
+    }
+}
+
+char* ReverseSentence(char *pData)
+{
+    if(pData == NULL)
+        return NULL;
+
+    char *pBegin = pData;
+
+    char *pEnd = pData;
+    while(*pEnd != '\0')
+        pEnd ++;
+    pEnd--;
+
+    // 翻转整个句子
+    Reverse(pBegin, pEnd);
+
+    // 翻转句子中的每个单词
+    pBegin = pEnd = pData;
+    while(*pBegin != '\0')
+    {
+        if(*pBegin == ' ') // 处理连续空格，末字符为空格的情形
+        {
+            pBegin ++;
+            pEnd ++;
+        }
+        else if(*pEnd == ' ' || *pEnd == '\0') // 找到了划分单词的地方
+        {
+            Reverse(pBegin, --pEnd); // 翻转整个单词
+            pBegin = ++pEnd;         // 令pBegin跳到下一个单词的开头
+        }
+        else
+        {
+            pEnd ++; // 单词未结束，继续找
+        }
+    }
+
+    return pData;
+}
+```
