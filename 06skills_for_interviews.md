@@ -584,3 +584,57 @@ void PrintProbability_Solution2(int number)
 
 可能有人还会疑惑，使用两个数组来计数，那最后输出那个数组是否就包含了所有和值的计数呢？会不会有遗漏呢？其实，确实是包含了全部的，因为每次用于赋值的那个计数数组，计数都包含了和值0~加入新骰子后的最大和值，没有遗漏。另外，我们最后输出应该用什么标志位也应该很清楚，应该使用对应于最后一次用于赋值的数组的那个标志位。
 
+## 面试题44：扑克牌的顺子
+
+### 题目
+
+> 从扑克牌中随机抽5张牌，判断是不是一个顺子，即这5张牌是不是连续的。2~10为数字本身，A为1，J为11，Q为12，K为13，而大、小王可以看成任意数字。
+
+### 解析
+
+这题还挺有意思的，在转换为计算机语言时，手牌其实就是一个数组，为了方便，不妨把大、小王先看作数字0。要判断是否顺子，我们可以先对数组排序，然后分别统计以下0的数目，以及需要填补的间隔大小。最后判断间隔能否被填补好就可以了。
+
+在数组排序这一步，书中给出的是使用qsort快排函数以及自定义的比较函数实现O(n logn)d的排序，我们也可以基于哈希表来实现O(n)的排序。不过鉴于n的规模并不大，所以这两种排序算法相差不大。基于O(n)的排序可以看一下这篇文章：[特殊的O(n)时间排序[sort ages with hashtable]](http://www.cnblogs.com/hellogiser/p/sort-ages-with-hashtable.html)。其实就是先扫一遍数组用哈希表计数，然后扫一遍哈希表重排数组。
+
+```c++
+// 两个参数分别是手牌和手牌数（题目中是5 ）
+bool IsContinuous(int* numbers, int length)
+{
+    if(numbers == NULL || length < 1)
+        return false;
+
+    qsort(numbers, length, sizeof(int), compare);
+
+    int numberOfZero = 0; // 大、小王的张数
+    int numberOfGap = 0;  // 需要填补的牌数
+
+    // 统计数组中0的个数
+    for(int i = 0; i < length && numbers[i] == 0; ++i)
+        ++ numberOfZero;
+
+    // 统计数组中的间隔数目
+    int small = numberOfZero;
+    int big = small + 1;
+    while(big < length)
+    {
+        // 两个数相等，有对子，不可能是顺子
+        if(numbers[small] == numbers[big])
+            return false;
+
+        // 两个数不等，计算间隔，两张牌相差1也即相邻时间隔为0
+        numberOfGap += numbers[big] - numbers[small] - 1;
+        // 继续比较下两张牌
+        small = big;
+        ++big;
+    }
+
+    // 若大、小王能把间隔都填补上或者不需要填补间隔就会返回true
+    return (numberOfGap > numberOfZero) ? false : true;
+}
+
+int compare(const void *arg1, const void *arg2)
+{
+   return *(int*)arg1 - *(int*)arg2;
+}
+
+```
