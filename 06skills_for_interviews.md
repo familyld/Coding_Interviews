@@ -638,3 +638,60 @@ int compare(const void *arg1, const void *arg2)
 }
 
 ```
+
+## 面试题45：圆圈中最后剩下的数字
+
+### 题目
+
+> `0,1,...,n-1` 这n个数字排成一个圆圈，从数字0开始每次从这个圆圈里删除第m个数字。求出这个圆圈里剩下的最后一个数字。
+
+### 解析
+
+最简单的做法，用一个环形链表来模拟就好了，每走m-1步删除一个元素，若干轮后就能得到最后一个数字了。在c++中，我们可以用标准库提供的list容器来实现，list是双向循环链表，插入删除等操作都封装好了，使用很方便。
+
+```c++
+// ====================方法1====================
+int LastRemaining_Solution1(unsigned int n, unsigned int m)
+{
+    if(n < 1 || m < 1)
+        return -1;
+
+    // 初始化环形链表
+    unsigned int i = 0;
+    list<int> numbers;
+    for(i = 0; i < n; ++ i)
+        numbers.push_back(i);
+
+    list<int>::iterator current = numbers.begin();
+    while(numbers.size() > 1)
+    {
+        for(int i = 1; i < m; ++ i)
+        {// 先走m-1步，找到这一轮的第m个数
+            current ++;
+            // 如果到底了尾部就返回头部，保证环形链表的遍历顺序
+            // 注意list.end()指向的是最后一个元素后面的一个位置
+            if(current == numbers.end())
+                current = numbers.begin();
+        }
+
+        // 记住这一轮第m+1个数的位置
+        list<int>::iterator next = ++ current;
+        if(next == numbers.end())
+            next = numbers.begin();
+
+        // 删除这一轮的第m个数
+        -- current;
+        numbers.erase(current);
+        current = next; // 从第m+1个数开始新的一轮
+    }
+
+    return *(current);
+}
+```
+
+要注意的就是我们使用迭代器来遍历数组，其实就是用一个指针来走list上的结点，走到list.end()就证明已经到达最后了，此时指向的不是最后一个元素（我猜指的应该是NULL），我们需要把迭代器移动回链表头。
+
+另外，在删除时，其实是把指针指向的内存空间释放掉，封装好的erase函数会帮我们把断开的链表接好，但是我们还是需要用一个指针预先记住下一个数的位置，不能删除之后就找不到它了。
+
+假设链表长为n，每m个数删除一个，那么上面的解法复杂度就是O(mn)，因为每删除一个数字都要经历m个操作。而且这种解法还要借助一个O(n)的环形链表来辅助。有没有更好的方法呢？
+
