@@ -760,7 +760,7 @@ int LastRemaining_Solution2(unsigned int n, unsigned int m)
 
 ### 解析
 
-这题目不属于数据结构和算法的范畴，我不是太关心，它更偏向于对C++原样特性的考查。不过其他编程语言也有共性，所以这里还是简单地进行一下解析。
+这题目不属于数据结构和算法的范畴，我不是太关心，它更偏向于对C++语言特性的考查。不过其他编程语言也有共性，所以这里还是简单地进行一下解析。
 
 方法一借助构造函数和静态变量求解，把累加逻辑隐藏在构造函数中，然后创建n个实例来达到累加的目的。
 
@@ -919,4 +919,58 @@ int Add(int num1, int num2)
 
     return num1;
 }
+```
+
+## 面试题48：不能被继承的类
+
+### 题目
+
+> 用C++设计一个不能被继承的类。
+
+### 解析
+
+这题目也不属于数据结构和算法的范畴，我不是太关心，更偏向于对C++对象设计语法的考查。
+
+方法一把构造函数设为私有函数，当别的类试图继承它时，会自动调用它的构造函数和析构函数，从而导致编译出错。因此这样设计的类是无法被继承的。我们可以通过一个公有函数来获取它的实例。
+
+```c++
+// ====================方法一====================
+class SealedClass1
+{
+public:
+    static SealedClass1* GetInstance()
+    {
+        return new SealedClass1();
+    }
+
+    static void DeleteInstance( SealedClass1* pInstance)
+    {
+        delete pInstance;
+    }
+
+private:
+    SealedClass1() {}
+    ~SealedClass1() {}
+};
+```
+
+方法二利用虚拟继承和友元类型，就不详细解释了。想要深入探究的话自己查找资料就好了~
+
+```c++
+// ====================方法二====================
+template <typename T> class MakeSealed
+{
+    friend T;
+
+private:
+    MakeSealed() {}
+    ~MakeSealed() {}
+};
+
+class SealedClass2 : virtual public MakeSealed<SealedClass2>
+{
+public:
+    SealedClass2() {}
+    ~SealedClass2() {}
+};
 ```
