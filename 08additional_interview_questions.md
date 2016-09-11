@@ -49,3 +49,37 @@ bool duplicate(int numbers[], int length, int* duplication)
     return false;
 }
 ```
+
+## 面试题52：构建乘积数组
+
+### 题目
+
+> 给定一个数组 `A[0,1,...,n-1]`，请构建一个数组 `B[0,1,...,n-1]`，其中B中的元素 `B[i] = A[0] × A[1] × ... × A[i-1] × A[i+1] × ... × A[n-1]`。不能使用除法。
+
+### 解析
+
+
+
+```c++
+void multiply(const vector<double>& array1, vector<double>& array2)
+{
+    int length1= array1.size();
+    int length2 = array2.size();
+
+    if(length1 == length2 && length2 > 1)
+    {
+        array2[0] = 1;
+        for(int i = 1; i < length1; ++i)
+        {
+            array2[i] = array2[i - 1] * array1[i - 1];
+        }
+
+        double temp = 1;
+        for(int i = length1 - 2; i >= 0; --i)
+        {
+            temp *= array1[i + 1];
+            array2[i] *= temp;
+        }
+    }
+}
+```
