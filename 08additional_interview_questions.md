@@ -58,7 +58,19 @@ bool duplicate(int numbers[], int length, int* duplication)
 
 ### 解析
 
+一定要看清楚题目，这题要求数组B的每一个元素B[i]等于数组A除A[i]以外所有元素的积。
 
+不能用除法，但是我们不妨从另外一个角度去想这个问题。**B[i]根据i的位置可以划分为两部分来求解**，它等于数组A中位置i之前的元素之积 * 数组A中位置i之后的元素之积。可以画出下图这样的矩阵：
+
+![matrix](https://github.com/familyld/Coding_Interviews/blob/master/graph/52_ArrayConstruction.jpg?raw=true)
+
+矩阵第i行对应着B[i]乘积的各个因子，其中位置i用1来代替。按照上面说的那样，我们可以把B[i]分成两部分，假设B[i] = C[i] * D[i]。那么C就对应着数组A中位置i之前的元素之积，D就对应着数组A中位置i之后的元素之积（1同时算入C和D中）。
+
+我们可以从上往下计算出C[i]，初始化 `C[0] = 1`，有通项公式 `C[i] = C[i-1] *A[i]`;
+
+我们可以从下往上计算出D[i]，初始化 `D[n-1] = 1`，有通项公式 `D[i] = D[i+1] *A[i+1]`;
+
+写成代码：
 
 ```c++
 void multiply(const vector<double>& array1, vector<double>& array2)
@@ -66,19 +78,20 @@ void multiply(const vector<double>& array1, vector<double>& array2)
     int length1= array1.size();
     int length2 = array2.size();
 
+    // 只有两数组长度相等，且数组长度大于1才是合法输入
     if(length1 == length2 && length2 > 1)
     {
-        array2[0] = 1;
+        array2[0] = 1; // 初始化C[0]
         for(int i = 1; i < length1; ++i)
-        {
+        {   // 对应从上往下计算出C[i]
             array2[i] = array2[i - 1] * array1[i - 1];
         }
 
-        double temp = 1;
+        double temp = 1; // 初始化D[n-1]
         for(int i = length1 - 2; i >= 0; --i)
         {
-            temp *= array1[i + 1];
-            array2[i] *= temp;
+            temp *= array1[i + 1]; // 对应从下往上计算出D[i]
+            array2[i] *= temp;     // 对应B[i] = C[i] * D[i]
         }
     }
 }
