@@ -437,3 +437,80 @@ ListNode* EntryNodeOfLoop(ListNode* pHead)
     return pNode1;
 }
 ```
+
+## 面试题57：删除链表中重复的结点
+
+### 题目
+
+> 在一个排序的链表中，如何删除重复的结点？例如：
+
+删除前：
+
+```
+1 -> 2 -> 3 -> 3 -> 4 -> 4 -> 5
+```
+
+删除后：
+
+```
+1 -> 2 -> 5
+```
+
+### 解析
+
+这题我们需要注意的就是删除重复结点前，需要记住前面的那一个非重复结点，保证删除完毕后，前一个个非重复结点依然能连接到下一个非重复结点，链表不会发生锻炼。
+
+另一个需要注意的点就是，头结点是有可能被删除的，所以调用函数时要按引用传递头结点指针，否则无法进行修改和删除。
+
+```c++
+void deleteDuplication(ListNode** pHead)
+{
+    if(pHead == NULL || *pHead == NULL)
+        return;
+
+    ListNode* pPreNode = NULL; // 前一结点初始为NULL，因为头结点没有前一结点
+    ListNode* pNode = *pHead;
+    while(pNode != NULL) // 遍历链表直到到达尾部
+    {
+        ListNode *pNext = pNode->m_pNext; // 取得下一结点
+        bool needDelete = false;
+        // 如果下一结点和当前结点值相同，就说明需要删除
+        if(pNext != NULL && pNext->m_nValue == pNode->m_nValue)
+            needDelete = true;
+
+        // 不用删除的话就继续遍历下一结点
+        // 把前一结点更新为当前结点
+        if(!needDelete)
+        {
+            pPreNode = pNode;
+            pNode = pNode->m_pNext;
+        }
+
+        // 删除结点
+        else
+        {
+            // 从当前结点开始删除值相同的结点
+            int value = pNode->m_nValue;
+            ListNode* pToBeDel = pNode;
+            while(pToBeDel != NULL && pToBeDel->m_nValue == value)
+            {
+                pNext = pToBeDel->m_pNext;
+
+                delete pToBeDel;
+                pToBeDel = NULL;
+
+                pToBeDel = pNext;
+            }
+
+            // 如果发现是头结点被删除了，则把头结点改为（删除完重复结点后的）下一结点
+            if(pPreNode == NULL)
+                *pHead = pNext;
+            // 否则就把前一结点的next指针指向（删除完重复结点后的）下一结点
+            else
+                pPreNode->m_pNext = pNext;
+
+            pNode = pNext; // 继续遍历下一结点，前一结点不需移动
+        }
+    }
+}
+```
