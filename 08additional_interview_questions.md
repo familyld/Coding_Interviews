@@ -359,10 +359,25 @@ private:
 
 > 一个链表中包含环，如何找出环的入口结点？例如，在图8.3的链表中，环的入口结点是结点3。
 
+![ring](https://github.com/familyld/Coding_Interviews/blob/master/graph/56_EntryNodeInListLoop.jpg?raw=true)
 
 ### 解析
 
+这题可以分为三个步骤来完成：
 
+1. 判断链表中有没有环
+2. 计算环的结点数
+3. 找到环的入口结点
+
+先分析第一步，判断链表中有没有环，可以用一快一慢两个指针来实现。为什么可以这样做不妨看看知乎上的一个问题：[为什么用快慢指针找链表的环，快指针和慢指针一定会相遇？](https://www.zhihu.com/question/23208893)，还是挺有意思的。如果链表中存在环，那么快指针必然会从后追上慢指针，发生相遇；如果链表中没有环，那么快指针就会走到尾结点。
+
+接下来，如果存在环，我们就计算一下环中结点的数目。怎么办到呢？其实很简单，我们同样使用两个指针，一个指针固定不动在第一步快慢指针相遇的地方，另一个指针一边往前移动一边计数，那么当这两个指针再次相遇时，所得的计数就是环中结点的数目了。
+
+最后，怎么找到环的入口结点呢？其实可能有人还没想明白第二步的作用，可以回忆一下[面试题15：链表中的倒数第k个结点](https://github.com/familyld/Coding_Interviews/blob/master/C%2B%2B/15_KthNodeFromEnd/README.md)。其实我们统计环中结点的数目就是为第三步服务的！要找到环的入口结点，实际上和这一题有异曲同工之妙。
+
+假设我们把环的入口结点看作环的第一个结点（例子中的3），那么环的最后一个结点（例子中的6）就是环中连接到入口结点的那个结点，我们可以把它看作链表的最后一个结点。这时如果我们把环拿掉，其实这道题就变得跟面试题15一模一样了。
+
+假设环中结点数为k，那么我们现在要找的就是整个链表的倒数第k个结点。同样使用两个指针，第一个指针先走k步，然后第二个指针再走，此时两个指针之间隔着k-1个结点。当第一个指针和第二个指针相遇时，它们指向的结点就是环的入口结点了。
 
 ```c++
 ListNode* MeetingNode(ListNode* pHead)
@@ -377,16 +392,17 @@ ListNode* MeetingNode(ListNode* pHead)
     ListNode* pFast = pSlow->m_pNext;
     while(pFast != NULL && pSlow != NULL)
     {
-        if(pFast == pSlow)
+        if(pFast == pSlow) // 返回相遇的结点
             return pFast;
 
-        pSlow = pSlow->m_pNext;
+        pSlow = pSlow->m_pNext; // 慢指针走一步
 
-        pFast = pFast->m_pNext;
-        if(pFast != NULL)
+        pFast = pFast->m_pNext; // 快指针走两步
+        if(pFast != NULL)       // 注意判断第二步是否能走
             pFast = pFast->m_pNext;
     }
 
+    // 不存在环，返回NULL
     return NULL;
 }
 
@@ -396,7 +412,7 @@ ListNode* EntryNodeOfLoop(ListNode* pHead)
     if(meetingNode == NULL)
         return NULL;
 
-    // get the number of nodes in loop
+    // 获取环中结点的数目
     int nodesInLoop = 1;
     ListNode* pNode1 = meetingNode;
     while(pNode1->m_pNext != meetingNode)
@@ -405,14 +421,14 @@ ListNode* EntryNodeOfLoop(ListNode* pHead)
         ++nodesInLoop;
     }
 
-    // move pNode1
+    // 让指针1先走nodesInLoop步
     pNode1 = pHead;
     for(int i = 0; i < nodesInLoop; ++i)
         pNode1 = pNode1->m_pNext;
 
-    // move pNode1 and pNode2
+    // 指针1、2同时移动
     ListNode* pNode2 = pHead;
-    while(pNode1 != pNode2)
+    while(pNode1 != pNode2) // 相遇时停止
     {
         pNode1 = pNode1->m_pNext;
         pNode2 = pNode2->m_pNext;
