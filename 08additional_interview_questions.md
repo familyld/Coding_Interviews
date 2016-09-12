@@ -279,3 +279,76 @@ bool isExponential(char** str)
     return (**str == '\0') ? true : false;
 }
 ```
+
+## 面试题55：字符流中第一个不重复的字符
+
+### 题目
+
+> 请实现一个函数用来找出字符流中第一个只出现一次的字符。例如，但从字符流中制度处前两个字符 `"go"` 时，第一个只出现一次的字符是 `'g'`。当从该字符流中读出前六个字符 `"gooogle"` 时，第一个只出现一次的字符是 `'l'`。
+
+### 解析
+
+这题其实不难，输入是数据流，所以也可以把它看作是一道大数据的题目，非常有意思。
+
+这里我们实现一个类，通过维护一个哈希表和索引来实现题目的功能。因为是字符流，而字符只有256种可能，所以我们开一个长度为256的哈希表就可以了，索引则用来记录当前流过的字符在字符流中的位置。
+
+哈希表的每一个格子对应一个字符的不同状态，比如做以下设定：
+
+1. 字符未出现过，则哈希值为-1；
+2. 字符出现超过一次，则哈希值为-2；
+3. 字符仅出现了一次，哈希值为它在字符流中的位置（大于0）。
+
+这样，当我们从字符流中取得一个字符时，我们可以用O(1)时间来检查一下字符的哈希值，哈希值为-2则不再关心，只对索引进行更新（索引加一）；哈希值为-1则把哈希值更新为当前索引，然后索引加一。
+
+当我们要求第一个只出现一次的字符时，我们同样可以用O(1)时间找到答案（与输入规模，也即字符流的长度无关）。我们只需要遍历一次哈希表，找到只出现一次，且出现位置最前（索引值最小）的那个字符就可以了。
+
+```c++
+class CharStatistics
+{
+public:
+    CharStatistics() : index (0) // 构造时index初始化为0
+    {   // 哈希表全部初始化为-1，即未出现过
+        for(int i = 0; i < 256; ++i)
+            occurrence[i] = -1;
+    }
+
+    void Insert(char ch)
+    {
+        // 未出现过则把哈希表对应的值更新为在字符串中出现的位置
+        if(occurrence[ch] == -1)
+            occurrence[ch] = index;
+        // 已经出现过则更新为-2，不再关心
+        else if(occurrence[ch] >= 0)
+            occurrence[ch] = -2;
+
+        index++; // 没插入一个字符，索引加一
+    }
+
+    char FirstAppearingOnce()
+    {
+        char ch = '\0'; // 初始化为终止符
+        // 把最小索引初始化为int型能表示的最大整数
+        int minIndex = numeric_limits<int>::max();
+        for(int i = 0; i < 256; ++i) // 遍历一次整个哈希表
+        {
+            // 每次找到一个只出现一次的数并且在字符串中位置比最小索引前
+            // 就更新字符和最小索引
+            if(occurrence[i] >= 0 && occurrence[i] < minIndex)
+            {
+                ch = (char)i; // 从ASCII码值转换回字符
+                minIndex = occurrence[i];
+            }
+        }
+
+        return ch;
+    }
+
+private:
+    // occurrence[i]: A character with ASCII value i;
+    // occurrence[i] = -1: The character has not found;
+    // occurrence[i] = -2: The character has been found for mutlple times
+    // occurrence[i] >= 0: The character has been found only once
+    int occurrence[256]; // 哈希表
+    int index;           // 索引，当前处于字符串的位置，或者说目前字符流的长度
+};
+```
