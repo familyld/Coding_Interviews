@@ -571,3 +571,63 @@ BinaryTreeNode* GetNext(BinaryTreeNode* pNode)
     return pNext;
 }
 ```
+
+## 面试题59：对称的二叉树
+
+### 题目
+
+> 请实现一个函数，用来判断一棵二叉树是不是对称的。如果一棵二叉树和它的镜像一样，那么它是对称的。例如：
+
+```
+     8
+   /   \
+  6     6
+ / \   / \
+5   7 7   5
+```
+
+> 是一棵对称二叉树。
+
+### 解析
+
+前序遍历、中序遍历、后序遍历都是先访问左子结点再访问右子结点，而如果我们想要判断一棵树是否对称二叉树，我们可以创造一种遍历方式是先访问右子结点再访问左子结点的。如果使用两种对应遍历方式所得的遍历序列都相同，就说明这棵树是对称二叉树。
+
+书中以前序遍历为例编写代码，但实际上中序遍历和后序遍历也是可以的~
+
+特别注意，一种特殊情况如下：
+
+```c++
+     7
+   /   \
+  7     7
+ / \   /
+7   7 7
+```
+
+这种情况如果我们只是按上面的方式来比较是无法正确判断出的，怎么应对呢？我们只需要把NULL也考虑进来就可以了。
+
+```c++
+bool isSymmetrical(BinaryTreeNode* pRoot)
+{
+    return isSymmetrical(pRoot, pRoot);
+}
+
+bool isSymmetrical(BinaryTreeNode* pRoot1, BinaryTreeNode* pRoot2)
+{
+    // 同为NULL，则仍然认为是一样的，并且因为到达底部而返回
+    if(pRoot1 == NULL && pRoot2 == NULL)
+        return true;
+
+    // 一方为NULL，而另一方不是，说明不对称，返回false
+    if(pRoot1 == NULL || pRoot2 == NULL)
+        return false;
+
+    // 结点值不同，说明不对称，返回false
+    if(pRoot1->m_nValue != pRoot2->m_nValue)
+        return false;
+
+    // 结点值相同，继续进行比较，树1先访问左结点再访问右结点，树2则相反
+    return isSymmetrical(pRoot1->m_pLeft, pRoot2->m_pRight)
+        && isSymmetrical(pRoot1->m_pRight, pRoot2->m_pLeft);
+}
+```
