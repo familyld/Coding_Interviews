@@ -631,3 +631,71 @@ bool isSymmetrical(BinaryTreeNode* pRoot1, BinaryTreeNode* pRoot2)
         && isSymmetrical(pRoot1->m_pRight, pRoot2->m_pLeft);
 }
 ```
+
+## 面试题60：把二叉树打印成多行
+
+### 题目
+
+> 从上到下按层打印二叉树，同一层的结点按从左到右的顺序打印，每一层打印到一行。例如，打印下面的二叉树：
+
+```
+     8
+   /   \
+  6     10
+ / \   /  \
+5   7 9    11
+```
+
+> 结果是：
+
+```
+8
+6   10
+5   7   9   11
+```
+
+### 解析
+
+这题思路很简单，就是考查BFS的，逐层遍历一棵树只需要用队列模拟就可以了。
+
+```c++
+void Print(BinaryTreeNode* pRoot)
+{
+    if(pRoot == NULL)
+        return;
+
+    std::queue<BinaryTreeNode*> nodes;
+    nodes.push(pRoot);
+    int nextLevel = 0;   // 下一层需要打印的结点数
+    int toBePrinted = 1; // 当前层需要打印的结点数
+
+    while(!nodes.empty()) // 整棵树打印完毕时停止
+    {
+        BinaryTreeNode* pNode = nodes.front();
+        printf("%d ", pNode->m_nValue);
+
+        if(pNode->m_pLeft != NULL)
+        {
+            nodes.push(pNode->m_pLeft);
+            ++nextLevel;
+        }
+        if(pNode->m_pRight != NULL)
+        {
+            nodes.push(pNode->m_pRight);
+            ++nextLevel;
+        }
+
+        // 首结点出队，当前层需要打印的结点数减一
+        nodes.pop();
+        --toBePrinted;
+
+        // 若当前层打印完毕，则进行换行，开始打印下一层
+        if(toBePrinted == 0)
+        {
+            printf("\n");
+            toBePrinted = nextLevel;
+            nextLevel = 0;
+        }
+    }
+}
+```
