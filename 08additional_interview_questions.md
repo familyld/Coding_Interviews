@@ -787,3 +787,88 @@ void Print(BinaryTreeNode* pRoot)
     }
 }
 ```
+
+## 面试题62：序列化二叉树
+
+### 题目
+
+> 请实现两个函数，分别用来序列化和反序列化二叉树。
+
+### 解析
+
+首先要理解一下什么是序列化，什么是反序列化？
+
+其实，我们谈论到的很多数据结构比方说树，甚至一些更复杂的自定定义的对象，是没法直接保存或传输的，只有程序运行时可以用。当我们需要保存到硬盘或者进行传输时就必须进行序列化，然后要放入程序时就要重新反序列化解析出来。可以如下定义：
+
+- 序列化： 将数据结构或对象转换成二进制串的过程。
+- 反序列化：将在序列化过程中所生成的二进制串转换成数据结构或者对象的过程。
+
+不过这题我们在程序中只需要把二叉树转换为字符串就可以了。
+
+前面有一道题是通过前序遍历序列和中序遍历序列构造出一棵二叉树的，这里其实也可以用这样的思路，把二叉树序列化成前序遍历序列和中序遍历序列这两个序列来存储，然后反序列化时按这两个序列重新构造二叉树就可以了。但这种思路有两个很大的缺点就是：（1）不能有数值重复的结点；（2）要整个序列读出来才可以进行反序列化。
+
+事实上不用这么复杂，我们只需要选择一种遍历方式就可以了，关键是用一个特殊的符号来表示NULL，这样在反序列化时我们就可以知道什么时候到达底部了。
+
+```c++
+void Serialize(BinaryTreeNode* pRoot, ostream& stream)
+{
+    if(pRoot == NULL) // 使用$标识NULL
+    {
+        stream << "$,";
+        return;
+    }
+
+    // 前序遍历
+    stream << pRoot->m_nValue << ','; // 序列化当前结点，以逗号为分隔
+    Serialize(pRoot->m_pLeft, stream);
+    Serialize(pRoot->m_pRight, stream);
+}
+
+// 从输入流中每次读出一个结点的值
+bool ReadStream(istream& stream, int* number)
+{
+    if(stream.eof())
+        return false;
+
+    char buffer[32];
+    buffer[0] = '\0';
+
+    char ch;
+    stream >> ch;
+    int i = 0;
+    while(!stream.eof() && ch != ',')
+    { // 遇到EOF表示序列已读完，而遇到逗号则说明这个结点的值读完了
+        buffer[i++] = ch;
+        stream >> ch;
+    }
+
+    // 判断读出的是否数字，并进行相应的转换
+    bool isNumeric = false;
+    if(i > 0 && buffer[0] != '$')
+    { // i大于0说明上一步有读出过内容，读出内容不为$即结点是数值，进行转换
+        *number = atoi(buffer);
+        isNumeric = true;
+    }
+
+    return isNumeric;
+}
+
+void Deserialize(BinaryTreeNode** pRoot, istream& stream)
+{
+    int number;
+    if(ReadStream(stream, &number))
+    { // 如果读出数字就构造结点，否则表示已到达底部，递归返回
+        *pRoot = new BinaryTreeNode();
+        (*pRoot)->m_nValue = number;
+        (*pRoot)->m_pLeft = NULL;
+        (*pRoot)->m_pRight = NULL;
+
+        Deserialize(&((*pRoot)->m_pLeft), stream);
+        Deserialize(&((*pRoot)->m_pRight), stream);
+    }
+}
+```
+
+这题特别注意一下传参的方式，一些参数是需要使用指针传递/引用传递的（修改实参而非形参的值），否则会无法正确修改它在内存中的值，从而导致错误。不妨看看这篇文章：[C/C++中函数参数传递详解](http://www.cnblogs.com/Romi/archive/2012/08/09/2630014.html)。参数中带`&`表示按引用传递。
+
+
