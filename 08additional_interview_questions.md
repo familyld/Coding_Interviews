@@ -871,4 +871,53 @@ void Deserialize(BinaryTreeNode** pRoot, istream& stream)
 
 这题特别注意一下传参的方式，一些参数是需要使用指针传递/引用传递的（修改实参而非形参的值），否则会无法正确修改它在内存中的值，从而导致错误。不妨看看这篇文章：[C/C++中函数参数传递详解](http://www.cnblogs.com/Romi/archive/2012/08/09/2630014.html)。参数中带`&`表示按引用传递。
 
+## 面试题63：二叉树搜索树的第k个结点
 
+### 题目
+
+> 给定一棵二叉搜索树，请找出其中的第k大的结点。例如：
+
+```
+     5
+   /   \
+  3     7
+ / \   / \
+2   4 6   8
+```
+
+> 这棵二叉搜索树里，按结点数值大小顺序第三个结点是4。
+
+### 解析
+
+这题思路很简单，对于一棵BST搜索第k大的结点，只需要用前序遍历来检索就可以了，前序遍历访问到的第k个结点就是题目所求。
+
+```c++
+BinaryTreeNode* KthNode(BinaryTreeNode* pRoot, unsigned int k)
+{
+    if(pRoot == NULL || k == 0)
+        return NULL;
+
+    return KthNodeCore(pRoot, k);
+}
+
+BinaryTreeNode* KthNodeCore(BinaryTreeNode* pRoot, unsigned int& k)
+{
+    BinaryTreeNode* target = NULL;
+
+    if(pRoot->m_pLeft != NULL) // 先访问左子结点
+        target = KthNodeCore(pRoot->m_pLeft, k);
+
+    if(target == NULL) // 然后访问当前结点
+    {
+        if(k == 1) // 若此时k已为1，则当前结点为所求
+            target = pRoot;
+
+        k--;       // 每次访问完后k值减一
+    }
+
+    if(target == NULL && pRoot->m_pRight != NULL) // 若当前结点不是，继续访问右子结点
+        target = KthNodeCore(pRoot->m_pRight, k);
+
+    return target;
+}
+```
