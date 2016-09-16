@@ -921,3 +921,85 @@ BinaryTreeNode* KthNodeCore(BinaryTreeNode* pRoot, unsigned int& k)
     return target;
 }
 ```
+
+## 面试题64：数据流中的中位数
+
+### 题目
+
+> 如何得到一个数据流中的中位数？如果从数据流中读出奇数个数值，那么中位数就是所有数值排序之后位于中间的数值。如果从数据流中读出偶数个数值，那么中位数就是所有数值排序之后中间两个数的平均值。
+
+### 解析
+
+这条题目其实和第5章的 面试题30：最小的k个数 有一点联系，面试题30通过维持一个大小为k的最大堆来实现从数据流中确定最小k个数的功能。而这一题要求得到数据流的中位数，这要更难一些。一是我们没有办法确定堆的大小；二是有可能从数据流中读出了偶数个数值，此时需要所有数值排序之后中间两个数的平均值。
+
+无法确定堆的大小，其实更准确一点来说，假设我们要找出从数据流中读取k个数时的中位数，我们必须把前面的k-1个数都保存下来因为我们并不知道k的取值，任意一个数字都可能会是取某个k值时的中位数，不能丢掉。
+
+而为了更有效地插入新数字（O(log n)复杂度）和查询中位数（O(1)复杂度），我们可以同时维护两个堆，一个最大堆，一个最小堆，以中位数划分，最大堆保存排序后数组的前半部分，最小堆则保存后半部分。我们要注意保持数据平均地分到这两个堆中，也即堆的大小相差不超过1。当从数据流中读取了奇数个数值时，取最小堆的顶部为中位数；当从数据流中读取了偶数个数值时，取最大堆顶部和最小堆顶部两个数值的平均值为中位数。
+
+为了保证正确取得中位数我们要保证最大堆里的数都比最小堆里的小，这就对插入操作有所要求。
+
+```c++
+template<typename T> class DynamicArray
+{
+public:
+    void Insert(T num)
+    {
+        if(((min.size() + max.size()) & 1) == 0)
+        { // 此时从数据流中读取了奇数个数值
+            if(max.size() > 0 && num < max[0])
+            { // 保证要加入最小堆的数字比最大堆的所有数字都更大
+                max.push_back(num);
+                push_heap(max.begin(), max.end(), less<T>());
+
+                num = max[0]; // 如果新数字没有堆顶大，就会交换两者的值
+
+                pop_heap(max.begin(), max.end(), less<T>());
+                max.pop_back();
+            }
+
+            // 把新数字加入最小堆
+            min.push_back(num);
+            push_heap(min.begin(), min.end(), greater<T>());
+        }
+        else
+        { // 此时从数据流中读取了偶数个数值
+            if(min.size() > 0 && min[0] < num)
+            {
+                min.push_back(num);
+                push_heap(min.begin(), min.end(), greater<T>());
+
+                num = min[0]; // 如果新数字没有堆顶小，就会交换两者的值
+
+                pop_heap(min.begin(), min.end(), greater<T>());
+                min.pop_back();
+            }
+
+            // 把新数字加入最大堆
+            max.push_back(num);
+            push_heap(max.begin(), max.end(), less<T>());
+        }
+    }
+
+    T GetMedian()
+    {
+        int size = min.size() + max.size();
+        if(size == 0)
+            throw exception(); //"No numbers are available"
+
+        T median = 0;
+        if((size & 1) == 1)
+            median = min[0];
+        else
+            median = (min[0] + max[0]) / 2;
+
+        return median;
+    }
+
+private:
+    vector<T> min;
+    vector<T> max;
+};
+```
+
+注意这里实现堆结构的方式和第30题不同，这里使用STL的push_heap，pop_heap函数以及vector来实现堆，并且以比较仿函数less和greater来实现最大堆和最小堆。
+
