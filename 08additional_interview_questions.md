@@ -1085,7 +1085,7 @@ a    d    e    e
 
 这题其实思路相当简单，我们可以直接枚举以矩阵的每一个格子作为路径开头进行深搜的情况，直到能完整匹配字符串就停止。特别注意要使用和输入矩阵同规模的visited矩阵来标记走过的路径，避免重复走过一个格子两次的情况。
 
-使用一个二重循环来实现枚举就可以了，注意每一次深搜时除了要注意是否匹配，还要注意边界的判断。当发现路径不合适递归返回时，要把路径长度减一并且设置好visited矩阵对应的值，这样才算把当前格子移出了路径。另外，搜索的时候，我们是往上下左右四个方向搜索，只要其中一个方向能成功匹配就算找到了。
+使用一个二重循环来实现枚举就可以了，注意每一次深搜时除了要注意是否匹配，还要注意边界的判断。当发现路径不合适要递归返回时，必须把路径长度减一并且设置好visited矩阵对应的值，这样才算把当前格子移出了路径。另外，搜索的时候，我们是往上下左右四个方向搜索，只要其中一个方向能成功匹配就算找到了。
 
 ```c++
 bool hasPath(char* matrix, int rows, int cols, char* str)
@@ -1150,3 +1150,72 @@ bool hasPathCore(char* matrix, int rows, int cols, int row, int col, char* str, 
 }
 ```
 
+## 面试题67：机器人的运动范围
+
+### 题目
+
+> 地上有一个m行n列的方格。一个机器人从坐标(0,0)的格子开始移动，它每一次可以向左、右、上、下移动一格，但不能进入行坐标和列坐标的数位之和大于k的格子。例如，当k为18时，机器人能够进入方格(35,37)，因为 `3+5+3+7=18`。但它不能进入方格(35,38)，因为 `3+5+3+8=19`。请问该机器人能够到达多少个格子？
+
+### 解析
+
+这题比上一题稍微简单一些，不需要枚举矩阵的所有格子，只需要从(0,0)开始，进行一次深搜就可以了。要注意好不能重复计算同一个格子，所以同样使用一个和输入矩阵同规模的visited矩阵来标记。过程主要用递归来实现就可以了：
+
+```c++
+// 计算一个数字的各数位之和
+int getDigitSum(int number)
+{
+    int sum = 0;
+    while(number > 0)
+    {
+        sum += number % 10;
+        number /= 10;
+    }
+
+    return sum;
+}
+
+// 判断机器人能否进入坐标为(row,col)的方格
+bool check(int threshold, int rows, int cols, int row, int col, bool* visited)
+{
+    if(row >=0 && row < rows && col >= 0 && col < cols      // 满足四个边界条件
+        && getDigitSum(row) + getDigitSum(col) <= threshold // 行列坐标数位之和小于阈值
+        && !visited[row* cols + col])                       // 并且未计算过
+        return true;
+
+    return false;
+}
+
+int movingCountCore(int threshold, int rows, int cols, int row, int col, bool* visited)
+{
+    int count = 0;
+    if(check(threshold, rows, cols, row, col, visited))
+    { // 当前格子满足条件，标记并继续往四个方向进行移动
+        visited[row * cols + col] = true;
+
+        count = 1 + movingCountCore(threshold, rows, cols,
+                    row - 1, col, visited)
+                + movingCountCore(threshold, rows, cols,
+                    row, col - 1, visited)
+                + movingCountCore(threshold, rows, cols,
+                    row + 1, col, visited)
+                + movingCountCore(threshold, rows, cols,
+                    row, col + 1, visited);
+    }
+
+    return count;
+}
+
+int movingCount(int threshold, int rows, int cols)
+{
+    bool *visited = new bool[rows * cols];
+    for(int i = 0; i < rows * cols; ++i)
+        visited[i] = false;
+
+    int count = movingCountCore(threshold, rows, cols,
+                    0, 0, visited);
+
+    delete[] visited;
+
+    return count;
+}
+```
