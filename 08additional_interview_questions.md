@@ -1066,3 +1066,87 @@ vector<int> maxInWindows(const vector<int>& num, unsigned int size)
     return maxInWindows;
 }
 ```
+
+## 面试题66：矩阵中的路径
+
+### 题目
+
+> 请设计一个函数，用来判断在一个矩阵中是否存在一条包含某字符串所有字符的路径。路径可以从矩阵中任意一格开始，每一步可以在矩阵中向左、右、上、下移动一格。如果一条路径经过了矩阵的某一格，那么该路径不能再次进入该格子。例如下面的矩阵：
+
+```
+a    b    c    e
+s    f    c    s
+a    d    e    e
+```
+
+> 包含了一条字符串 `"bcced"` 的路径。但矩阵中不包含字符串 `"abcb"` 的路径，因为字符串的第一个字符b占据了矩阵中的第一行第二个格子之后，路径不能再次进入这个格子。
+
+### 解析
+
+这题其实思路相当简单，我们可以直接枚举以矩阵的每一个格子作为路径开头进行深搜的情况，直到能完整匹配字符串就停止。特别注意要使用和输入矩阵同规模的visited矩阵来标记走过的路径，避免重复走过一个格子两次的情况。
+
+使用一个二重循环来实现枚举就可以了，注意每一次深搜时除了要注意是否匹配，还要注意边界的判断。当发现路径不合适递归返回时，要把路径长度减一并且设置好visited矩阵对应的值，这样才算把当前格子移出了路径。另外，搜索的时候，我们是往上下左右四个方向搜索，只要其中一个方向能成功匹配就算找到了。
+
+```c++
+bool hasPath(char* matrix, int rows, int cols, char* str)
+{
+    if(matrix == NULL || rows < 1 || cols < 1 || str == NULL)
+        return false;
+
+    bool *visited = new bool[rows * cols];
+    memset(visited, 0, rows * cols);
+
+    int pathLength = 0; // 初始路径长度为0
+    // 使用一个二重循环来枚举以矩阵的每一个格子作为路径开头进行深搜的情况
+    for(int row = 0; row < rows; ++row)
+    {
+        for(int col = 0; col < cols; ++col)
+        {
+            if(hasPathCore(matrix, rows, cols, row, col, str,
+                pathLength, visited))
+            { // 只要有一次找到了就算成功，直接返回
+                return true;
+            }
+        }
+    }
+
+    delete[] visited;
+
+    return false;
+}
+
+bool hasPathCore(char* matrix, int rows, int cols, int row, int col, char* str, int& pathLength, bool* visited)
+{
+    if(str[pathLength] == '\0') // 字符串匹配完成，返回true
+        return true;
+
+    bool hasPath = false;
+    if(row >= 0 && row < rows && col >= 0 && col < cols
+            && matrix[row * cols + col] == str[pathLength]
+            && !visited[row * cols + col])
+    { // 前四个判断条件用于防止溢出边界，后两个判断条件则是当前格子
+      // 与当前字符是否匹配，当前格子是否未使用
+        ++pathLength;
+        visited[row * cols + col] = true;
+
+        // 只要有一个方向匹配完整就算成功
+        hasPath = hasPathCore(matrix, rows, cols, row, col - 1,
+                    str, pathLength, visited)
+                || hasPathCore(matrix, rows, cols, row - 1, col,
+                    str, pathLength, visited)
+                || hasPathCore(matrix, rows, cols, row, col + 1,
+                    str, pathLength, visited)
+                || hasPathCore(matrix, rows, cols, row + 1, col,
+                    str, pathLength, visited);
+
+        if(!hasPath)
+        { // 匹配失败时要把格子移出路径，以便进行下一次搜索
+            --pathLength;
+            visited[row * cols + col] = false;
+        }
+    }
+
+    return hasPath;
+}
+```
+
